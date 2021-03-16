@@ -1,18 +1,23 @@
 package com.lexcorp.joura;
 
+import java.util.HashMap;
 import java.util.List;
 
-@Trackable
-public class TestObject implements Trackable1 {
+
+@TrackOptions
+public class TestObject implements Trackable {
     private int value1 = 0;
     private Integer value2 = 2;
+    private boolean value3 = true;
 
     public int getValue1() {
         return value1;
     }
 
     public TestObject setValue1(int value1) {
+        java.util.Map<String, Object> map = new java.util.HashMap<>();
         this.value1 = value1;
+        System.out.println("Hello");
         return this;
     }
 
@@ -36,6 +41,11 @@ public class TestObject implements Trackable1 {
         return this;
     }
 
+
+    public int setValue4() {
+        int value4 = 10;
+        return value4;
+    }
     public static List<Integer> changed(Integer value) {
         value = 100;
         return null;

@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test;
 
 
 import com.lexcorp.joura.processors.TrackProcessor;
-import com.lexcorp.joura.processors.TrackProcessor1;
-import com.lexcorp.joura.templates.TrackableTemplate;
 import com.lexcorp.joura.utils.TestSpooner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,7 +25,7 @@ public class TrackingTest {
 
     @Test
     public void testTrack() throws Exception {
-        spooner.process(TrackProcessor1.class);
+        spooner.process(TrackProcessor.class);
         spooner.print(new File("target/spooned/track"));
         assertTrue(spooner.compile());
 

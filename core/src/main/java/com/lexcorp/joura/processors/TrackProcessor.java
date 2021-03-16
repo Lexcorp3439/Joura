@@ -4,85 +4,127 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.lexcorp.joura.Trackable;
-import com.lexcorp.joura.templates.TrackableTemplate;
+import com.lexcorp.joura.utils.TrackCodeBuilder;
 
-import spoon.processing.AbstractAnnotationProcessor;
-import spoon.reflect.code.CtBlock;
+import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtCodeSnippetStatement;
+import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
+import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLocalVariable;
+import spoon.reflect.code.CtReturn;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.ModifierKind;
-import spoon.reflect.path.CtRole;
+import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
-public class TrackProcessor extends AbstractAnnotationProcessor<Trackable, CtClass<?>> {
-    private final Logger log = Logger.getLogger(TrackProcessor1.class.getName());
+import static com.lexcorp.joura.utils.TrackCodeBuilder.buildTrackExpression;
+
+public class TrackProcessor extends AbstractProcessor<CtClass<?>> {
+    private final Logger log = Logger.getLogger(TrackProcessor.class.getName());
 
     @Override
-    public void process(Trackable trackable, CtClass<?> ctClass) {
+    public boolean isToBeProcessed(CtClass<?> ctClass) {
+        final CtTypeReference<?> trackableRef = getFactory().createCtTypeReference(Trackable.class);
+        return ctClass.getSuperInterfaces().contains(trackableRef);
+    }
+
+    @Override
+    public void process(CtClass<?> ctClass) {
         log.info("START");
-        ctClass.addField(createTrackField());
         Set<CtMethod<?>> methods = ctClass.getAllMethods();
+        Set<CtMethod<?>> classMethods = ctClass.getMethods();
         List<CtField<?>> classFields = ctClass.getFields();
+        CtField<Boolean> trackField = createTrackField();
+
+        ctClass.addField(0, trackField);
+        List<CtMethod<?>> startTrackMethods = classMethods.stream().filter(ctMethod -> ctMethod.getSimpleName().equals("startTrack")).collect(Collectors.toList());
+        List<CtMethod<?>> stopTrackMethods = classMethods.stream().filter(ctMethod -> ctMethod.getSimpleName().equals("stopTrack")).collect(Collectors.toList());
+
+        if (startTrackMethods.size() == 0) {
+            ctClass.addMethod(TrackCodeBuilder.createStartTrackMethod(getFactory()));
+        }
+        if (stopTrackMethods.size() == 0) {
+            ctClass.addMethod(TrackCodeBuilder.createStopTrackMethod(getFactory()));
+        }
+        ctClass.getMethod("startTrack").getBody().insertEnd(
+                TrackCodeBuilder.createStartTrackMethodBody(getFactory(), ctClass, trackField.getReference())
+        );
+        ctClass.getMethod("stopTrack").getBody().insertEnd(
+                TrackCodeBuilder.createStopTrackMethodBody(getFactory(), ctClass, trackField.getReference())
+        );
+
         for (CtMethod<?> method : methods) {
+            if (method.getSimpleName().equals("setValue4")) {
+                System.out.println("J");
+            }
             List<CtField<?>> editableFields = getEditableFieldsFromMethod(method, classFields);
             if (editableFields.size() != 0) {
-//                TrackableTemplate template = new TrackableTemplate(method.getBody());
-//                CtBlock newBody = template.apply(method.getDeclaringType());
-//                method.setBody(newBody);
-                CtCodeSnippetStatement snippet = getFactory().Core().createCodeSnippetStatement();
+                CtStatement statement = TrackCodeBuilder.buildTrackExpression(getFactory(), ctClass, trackField.getReference(), method, editableFields);
 
-
-                final String value = String.format("if (this.NEED_TRACK) {System.out.println(\"Hello\");}",
-                        method.getSimpleName(),
-                        ctClass.getSimpleName());
-                snippet.setValue(value);
-
-                List<CtStatement> statements = method.getBody().getStatements();
-                method.getBody().addStatement(method.getBody().getStatements().size() - 1, snippet);
+                if (method.getType().equals(getFactory().Type().VOID_PRIMITIVE)) {
+                    method.getBody().insertEnd(statement);
+                } else {
+                    List<CtReturn<?>> returnElements = method.getElements(Objects::nonNull);
+                    returnElements.forEach(ctReturn -> {
+                        if (ctReturn.getElements(e -> e instanceof CtInvocation).size() > 0) {
+                            method.getBody().removeStatement(ctReturn);
+                            CtLocalVariable<?> localVariableStatement = getFactory().createLocalVariable(
+                                    (CtTypeReference) method.getType(), "__returnVar", ctReturn.getReturnedExpression()
+                            );
+                            CtReturn<?> ctReturnStatement = getFactory().createReturn().setReturnedExpression(
+                                    (CtVariableRead) getFactory().createVariableRead(localVariableStatement.getReference(), false)
+                            );
+                            method.getBody().insertEnd(localVariableStatement);
+                            method.getBody().insertEnd(statement);
+                            method.getBody().insertEnd(ctReturnStatement);
+                        }
+                    });
+                }
             }
         }
     }
 
     private List<CtField<?>> getEditableFieldsFromMethod(CtMethod<?> method, List<CtField<?>> fields) {
-        List<CtField<?>> editableFields = new ArrayList<>();
-        method.getBody().getStatements().forEach((st) -> {
-            st.getElements((element) -> {
-                CtRole elementRole = element.getRoleInParent();
-                if (elementRole.equals(CtRole.VARIABLE) || elementRole.equals(CtRole.DEFAULT_EXPRESSION)) {
-                    if (element.getParent() instanceof CtFieldWrite) {
-                        CtField<?> f = ((CtFieldWrite<?>) element.getParent()).getVariable().getFieldDeclaration();
-                        if (fields.contains(f)) {
-                            editableFields.add(f);
-                        }
-                    }
+        Set<CtField<?>> editableFields = new HashSet<>();
+        method.getElements(e -> e instanceof CtInvocation).stream()
+                .map(e -> e.getElements(element -> element instanceof CtFieldReference))
+                .forEach(ctElementList -> {
+                    ctElementList.forEach(ctElement ->
+                            editableFields.add((((CtFieldRead<?>) ctElement.getParent()).getVariable()).getFieldDeclaration()));
+                });
+        method.getElements(e -> e instanceof CtFieldWrite).forEach(ctElement -> {
+                    editableFields.add(((CtFieldWrite<?>) ctElement).getVariable().getFieldDeclaration());
                 }
-                return element.getRoleInParent().equals(CtRole.VARIABLE);
-            });
-        });
-        return editableFields;
+        );
+        editableFields.retainAll(fields);
+        return new ArrayList<>(editableFields);
     }
 
-    private CtField<?> createTrackField() {
+    private CtField<Boolean> createTrackField() {
         Set<ModifierKind> modifierKinds = Collections.singleton(ModifierKind.PRIVATE);
 
-        CtCodeSnippetExpression<Boolean> snippet1 =  getFactory().Core().createCodeSnippetExpression();
+        CtCodeSnippetExpression<Boolean> snippet1 = getFactory().Core().createCodeSnippetExpression();
         snippet1.setType(getFactory().Type().BOOLEAN);
         snippet1.setValue("false");
 
         CtTypeReference<Boolean> reference = getFactory().Type().BOOLEAN;
         CtType<Boolean> type = reference.getTypeDeclaration();
-
-        return (CtField<?>) getFactory().createField(type, modifierKinds, reference, "NEED_TRACK", snippet1);
+        CtField<?> field = (CtField<?>) getFactory().createField(type, modifierKinds, reference, "NEED_TRACK", snippet1);
+        field.setDocComment("Tracking flag");
+        return (CtField<Boolean>) field;
     }
 
 
@@ -90,4 +132,5 @@ public class TrackProcessor extends AbstractAnnotationProcessor<Trackable, CtCla
     public void processingDone() {
         log.info("DONE");
     }
+
 }
