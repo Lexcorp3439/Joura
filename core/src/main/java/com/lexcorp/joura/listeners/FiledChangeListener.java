@@ -31,8 +31,12 @@ public class FiledChangeListener {
         log.info(fields.toString());
         log.info(trackable.getClass().getName());
         eventHandlers.forEach(handler -> handler.accept(trackable, methodName, fields));
-        instanceEventHandlers.get(trackable).forEach(handler -> handler.accept(trackable, methodName, fields));
-        classEventHandlers.get(trackable.getClass()).forEach(handler -> handler.accept(trackable, methodName, fields));
+        if (instanceEventHandlers.containsKey(trackable)) {
+            instanceEventHandlers.get(trackable).forEach(handler -> handler.accept(trackable, methodName, fields));
+        }
+        if (classEventHandlers.containsKey(trackable.getClass())) {
+            classEventHandlers.get(trackable.getClass()).forEach(handler -> handler.accept(trackable, methodName, fields));
+        }
     }
 
     public <T extends Trackable> void addEventHandler(EventHandler eventHandler) {
