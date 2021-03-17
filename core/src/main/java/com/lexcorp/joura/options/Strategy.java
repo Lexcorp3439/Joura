@@ -1,4 +1,4 @@
-package com.lexcorp.joura.utils;
+package com.lexcorp.joura.options;
 
 public enum Strategy {
     NONE, DEFAULT, DEEP;

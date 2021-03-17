@@ -1,10 +1,12 @@
-package com.lexcorp.joura.utils;
+package com.lexcorp.joura.analysis;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.lexcorp.joura.options.Strategy;
 
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
@@ -17,7 +19,7 @@ public class Analyser {
     private final Collection<CtField<?>> classFields;
     private final Strategy strategy;
 
-    public Analyser( Strategy strategy, Collection<CtField<?>> classFields, Collection<CtField<?>> ignoreClassFields) {
+    public Analyser(Strategy strategy, Collection<CtField<?>> classFields, Collection<CtField<?>> ignoreClassFields) {
         classFields.removeAll(ignoreClassFields);
         this.classFields = classFields;
         this.strategy = strategy;

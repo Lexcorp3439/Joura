@@ -3,7 +3,8 @@ package com.lexcorp.joura;
 import java.util.HashMap;
 import java.util.List;
 
-import com.lexcorp.joura.utils.Strategy;
+import com.lexcorp.joura.options.Strategy;
+import com.lexcorp.joura.options.TrackOptions;
 
 
 @TrackOptions(alwaysTrack = true, analysingStrategy = Strategy.NONE)

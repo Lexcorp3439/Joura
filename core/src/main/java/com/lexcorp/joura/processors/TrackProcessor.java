@@ -2,14 +2,13 @@ package com.lexcorp.joura.processors;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import com.lexcorp.joura.TrackOptions;
 import com.lexcorp.joura.Trackable;
-import com.lexcorp.joura.utils.Steps;
-import com.lexcorp.joura.utils.Strategy;
+import com.lexcorp.joura.analysis.Steps;
+import com.lexcorp.joura.options.Strategy;
+import com.lexcorp.joura.options.TrackOptions;
 
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtStatement;

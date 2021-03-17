@@ -1,13 +1,15 @@
-package com.lexcorp.joura.utils;
+package com.lexcorp.joura.analysis;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.lexcorp.joura.options.Strategy;
+import com.lexcorp.joura.utils.CtHelper;
 
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtFieldRead;
