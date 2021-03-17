@@ -15,22 +15,14 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.reference.CtTypeReference;
 
-public class TrackProcessor extends AbstractProcessor<CtClass<?>> {
+public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackable>> {
     private final Logger log = Logger.getLogger(TrackProcessor.class.getName());
     private Steps steps;
 
     @Override
-    public boolean isToBeProcessed(CtClass<?> ctClass) {
-        final CtTypeReference<?> trackableRef = getFactory().createCtTypeReference(Trackable.class);
-        return ctClass.getSuperInterfaces().contains(trackableRef);
-    }
-
-    @Override
-    public void process(CtClass<?> ctClass) {
+    public void process(CtClass<? extends Trackable> ctClass) {
         steps = new Steps(getFactory(), ctClass);
-        log.info("START");
 
         TrackOptions trackOptions = ctClass.getAnnotation(TrackOptions.class);
         boolean alwaysTrack = trackOptions != null && trackOptions.alwaysTrack();
@@ -65,7 +57,7 @@ public class TrackProcessor extends AbstractProcessor<CtClass<?>> {
 
     @Override
     public void processingDone() {
-        log.info("DONE");
+        // TODO: log process stat
     }
 
 }

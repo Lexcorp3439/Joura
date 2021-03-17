@@ -93,7 +93,7 @@ public class Steps {
             thenStatement.addStatement(ctHelper.createFormatCodeSnippet("map123456678.put(\"%s\", this.%s)", field.getSimpleName(), field.getSimpleName()));
         }
         CtStatement invocationStatement = ctHelper.createFormatCodeSnippet(
-                "com.lexcorp.joura.listeners.FiledChangeListener.getInstance().accept(this, \"%s\", map123456678)",
+                "com.lexcorp.joura.listeners.FieldChangeListener.getInstance().accept(this, \"%s\", map123456678)",
                 method.getSimpleName()
         );
         thenStatement.addStatement(invocationStatement);

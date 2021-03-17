@@ -9,21 +9,18 @@ import java.util.logging.Logger;
 import com.lexcorp.joura.Trackable;
 import com.lexcorp.joura.handlers.EventHandler;
 
-import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtMethod;
-
-public class FiledChangeListener {
-    private final Logger log = Logger.getLogger(FiledChangeListener.class.getName());
-    private static final FiledChangeListener INSTANCE = new FiledChangeListener();
+public class FieldChangeListener {
+    private final Logger log = Logger.getLogger(FieldChangeListener.class.getName());
+    private static final FieldChangeListener INSTANCE = new FieldChangeListener();
     private final List<EventHandler> eventHandlers = new ArrayList<>();
     private final Map<Trackable, List<EventHandler>> instanceEventHandlers = new HashMap<>();
     private final Map<Class<? extends Trackable>, List<EventHandler>> classEventHandlers = new HashMap<>();
 
-    public static FiledChangeListener getInstance() {
+    public static FieldChangeListener getInstance() {
         return INSTANCE;
     }
 
-    private FiledChangeListener() {
+    private FieldChangeListener() {
     }
 
     public <T extends Trackable> void accept(T trackable, String methodName, Map<String, Object> fields) {
