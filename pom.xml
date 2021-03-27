@@ -29,11 +29,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.mdkt.compiler</groupId>
-            <artifactId>InMemoryJavaCompiler</artifactId>
-            <version>${version.memcompiler}</version>
-        </dependency>
-        <dependency>
             <groupId>fr.inria.gforge.spoon</groupId>
             <artifactId>spoon-core</artifactId>
             <version>${version.spoon}</version>
@@ -67,28 +62,6 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>fr.inria.gforge.spoon</groupId>
-                <artifactId>spoon-maven-plugin</artifactId>
-                <version>${version.spoon.maven.plugin}</version>
-                <configuration>
-                    <debug>true</debug>
-                    <processors>
-                        <processor>
-                            com.lexcorp.joura.core.TrackProcessor
-                        </processor>
-                    </processors>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

@@ -4,13 +4,17 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.lexcorp.joura.options.Strategy;
+import com.lexcorp.joura.options.TrackField;
 import com.lexcorp.joura.options.TrackOptions;
+import com.lexcorp.joura.options.Untracked;
 
 
 @TrackOptions(alwaysTrack = true, analysingStrategy = Strategy.NONE)
 public class TestObject2 implements Trackable {
     private int value1 = 0;
+    @Untracked
     private Integer value2 = 2;
+    @TrackField
     private boolean value3 = true;
 
     public int getValue1() {
@@ -29,6 +33,7 @@ public class TestObject2 implements Trackable {
         changed(this.value2);
     }
 
+    @Untracked
     public List<Integer> update2() {
         return changed(this.value2);
     }
@@ -44,11 +49,11 @@ public class TestObject2 implements Trackable {
         return this;
     }
 
-
     public int setValue4() {
         int value4 = 10;
         return value4;
     }
+
     public static List<Integer> changed(Integer value) {
         value = 100;
         return null;

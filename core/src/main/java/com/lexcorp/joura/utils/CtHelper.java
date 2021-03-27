@@ -12,7 +12,9 @@ import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.code.CtVariableRead;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.ModifierKind;
@@ -66,6 +68,17 @@ public class CtHelper {
         ctLiteral.setValue(value);
         ctLiteral.setType(type);
         return ctLiteral;
+    }
+
+    public CtThisAccess<?> createThisAccess(CtClass<?> ctClass) {
+        return factory.createThisAccess(ctClass.getTypeErasure());
+    }
+
+    public <T> CtFieldRead<T> createCtFieldRead(CtClass<?> ctClass, CtField<T> varable) {
+        CtFieldRead<T> ctFieldRead = factory.createFieldRead();
+        ctFieldRead.setTarget(this.createThisAccess(ctClass));
+        ctFieldRead.setVariable(varable.getReference());
+        return ctFieldRead;
     }
 
     public <T> CtFieldRead<T> createCtFieldRead(CtExpression<?> target, CtVariableReference<T> varable) {

@@ -3,10 +3,10 @@ package com.lexcorp.joura.processors;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import com.lexcorp.joura.Trackable;
 import com.lexcorp.joura.analysis.Steps;
+import com.lexcorp.joura.options.Assign;
 import com.lexcorp.joura.options.Strategy;
 import com.lexcorp.joura.options.TrackOptions;
 
@@ -29,27 +29,36 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
         Strategy analysingStrategy = trackOptions == null ? Strategy.DEFAULT : trackOptions.analysingStrategy();
 
 
-        CtField<Boolean> trackField = steps.createClassTrackField(alwaysTrack);
+        CtField<Boolean> trackField = steps.createClassTrackFieldIfNotAssigned(alwaysTrack);
         ctClass.addField(0, trackField);
 
         if (!alwaysTrack) {
-            CtMethod<Void> startTrack = steps.createTrackMethodIfNotExist(true);
-            CtMethod<Void> stopTrack = steps.createTrackMethodIfNotExist(false);
-            startTrack.getBody().insertEnd(steps.createTrackMethodBody(true, trackField.getReference()));
-            stopTrack.getBody().insertEnd(steps.createTrackMethodBody(false, trackField.getReference()));
+            CtMethod<?> startTrack = steps.createTrackMethodIfNotExist(true);
+            CtMethod<?> stopTrack = steps.createTrackMethodIfNotExist(false);
+            if (startTrack.equals(stopTrack)) {
+                steps.updateMethodWithStatement(startTrack, steps.createTrackMethodBodyWithInvert());
+            } else {
+                steps.updateMethodWithStatement(startTrack, steps.createTrackMethodBody(true));
+                steps.updateMethodWithStatement(stopTrack, steps.createTrackMethodBody(false));
+            }
         }
 
-        List<CtMethod<?>> methods = ctClass.getAllMethods().stream().filter(m->!m.isStatic()).collect(Collectors.toList());
-        for (CtMethod<?> method : methods) {
-            Collection<CtField<?>> editableFields = steps.analyser(analysingStrategy).getEditableFieldsFromMethod(method);
-            if (editableFields.size() != 0) {
-                CtStatement fieldChangeNotifierStatement = steps.createFieldChangeNotifierStatement(trackField.getReference(), method, editableFields);
+        List<CtMethod<?>> methods = steps.getTrackedMethods();
 
-                if (method.getType().equals(getFactory().Type().VOID_PRIMITIVE)) {
-                    method.getBody().insertEnd(fieldChangeNotifierStatement);
-                } else {
-                    steps.updateReturnStatements(method, fieldChangeNotifierStatement);
-                }
+        for (CtMethod<?> method : methods) {
+            if (method.getSimpleName().equals("invokeMethod")) {
+                System.out.println();
+            }
+            Collection<CtField<?>> editableFields = method.hasAnnotation(Assign.class)
+                    ? steps.getAssignedFields(method)
+                    : steps.analyser(analysingStrategy).getEditableFieldsFromMethod(method);
+
+            if (editableFields.size() != 0) {
+                CtStatement fieldChangeNotifierStatement = steps.createFieldChangeNotifierStatement(
+                        trackField.getReference(), method, editableFields
+                );
+
+                steps.updateMethodWithStatement(method, fieldChangeNotifierStatement);
             }
         }
     }
