@@ -11,6 +11,20 @@
 
     <artifactId>tests</artifactId>
 
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- versions -->
+        <version.junit>5.5.2</version.junit>
+        <version.memcompiler>1.3.0</version.memcompiler>
+        <version.spoon>7.3.0-SNAPSHOT</version.spoon>
+        <version.spoon.maven.plugin>3.4.2</version.spoon.maven.plugin>
+        <!-- plugin versions -->
+        <pVersion.compiler>3.8.1</pVersion.compiler>
+        <pVersion.surefire>2.22.1</pVersion.surefire>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.lexcorp.joura</groupId>
@@ -26,21 +40,21 @@
 
     <build>
         <plugins>
-            <!--            <plugin>-->
-            <!--                &lt;!&ndash; Build an executable JAR &ndash;&gt;-->
-            <!--                <groupId>org.apache.maven.plugins</groupId>-->
-            <!--                <artifactId>maven-jar-plugin</artifactId>-->
-            <!--                <version>3.1.0</version>-->
-            <!--                <configuration>-->
-            <!--                    <archive>-->
-            <!--                        <manifest>-->
-            <!--                            <addClasspath>true</addClasspath>-->
-            <!--                            <classpathPrefix>lib/</classpathPrefix>-->
-            <!--                            <mainClass>com.lexcorp.joura.Main</mainClass>-->
-            <!--                        </manifest>-->
-            <!--                    </archive>-->
-            <!--                </configuration>-->
-            <!--            </plugin>-->
+            <plugin>
+                <!-- Build an executable JAR -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>com.lexcorp.joura.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -55,35 +69,35 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
-            <!--            <plugin>-->
-            <!--                <groupId>fr.inria.gforge.spoon</groupId>-->
-            <!--                <artifactId>spoon-maven-plugin</artifactId>-->
-            <!--                <version>${version.spoon.maven.plugin}</version>-->
-            <!--                <configuration>-->
-            <!--                    <debug>true</debug>-->
-            <!--                    <processors>-->
-            <!--                        <processor>-->
-            <!--                            com.lexcorp.joura.processors.TrackProcessor-->
-            <!--                        </processor>-->
-            <!--                    </processors>-->
-            <!--                </configuration>-->
-            <!--                <dependencies>-->
-            <!--                    <dependency>-->
-            <!--                        <groupId>com.lexcorp.joura</groupId>-->
-            <!--                        <artifactId>core</artifactId>-->
-            <!--                        <version>1.0-SNAPSHOT</version>-->
-            <!--                    </dependency>-->
-            <!--                </dependencies>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <phase>generate-sources</phase>-->
-            <!--                        <goals>-->
-            <!--&lt;!&ndash;                            <goal>generate</goal>&ndash;&gt;-->
-            <!--                            <goal>check</goal>-->
-            <!--                        </goals>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--            </plugin>-->
+            <plugin>
+                <groupId>fr.inria.gforge.spoon</groupId>
+                <artifactId>spoon-maven-plugin</artifactId>
+                <version>${version.spoon.maven.plugin}</version>
+                <configuration>
+                    <debug>true</debug>
+                    <processors>
+                        <processor>
+                            com.lexcorp.joura.processors.TrackProcessor
+                        </processor>
+                    </processors>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.lexcorp.joura</groupId>
+                        <artifactId>core</artifactId>
+                        <version>1.0-SNAPSHOT</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

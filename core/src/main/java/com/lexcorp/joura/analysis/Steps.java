@@ -162,16 +162,17 @@ public class Steps {
         CtFieldRead<Boolean> condition = ctHelper.createCtFieldRead(
                 factory.createThisAccess(ctClass.getTypeErasure()), trackFiledReference
         );
-        CtStatement mapStatement = ctHelper.createFormatCodeSnippet(
-                "java.util.Map<String, Object> map123456678 = new java.util.HashMap<>()"
+
+        StringBuilder codeSnippet = new StringBuilder();
+        codeSnippet.append("java.util.Map<String, Object> map123456678 = com.lexcorp.joura.utils.StringHelper.mapOf(");
+        fieldList.forEach(field ->
+                codeSnippet.append(String.format("\"%s\", this.%s,", field.getSimpleName(), field.getSimpleName()))
         );
+        codeSnippet.deleteCharAt(codeSnippet.length() - 1);
+        codeSnippet.append(")");
+        CtStatement mapStatement = ctHelper.createFormatCodeSnippet(codeSnippet.toString());
         thenStatement.addStatement(mapStatement);
 
-        for (CtField<?> field : fieldList) {
-            thenStatement.addStatement(ctHelper.createFormatCodeSnippet(
-                    "map123456678.put(\"%s\", this.%s)", field.getSimpleName(), field.getSimpleName())
-            );
-        }
         CtStatement invocationStatement = ctHelper.createFormatCodeSnippet(
                 "com.lexcorp.joura.listeners.FieldChangeListener.getInstance().accept(this, \"%s\", map123456678)",
                 method.getSimpleName()

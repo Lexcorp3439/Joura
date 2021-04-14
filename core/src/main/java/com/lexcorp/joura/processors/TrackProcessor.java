@@ -21,6 +21,11 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
     private Steps steps;
 
     @Override
+    public boolean isToBeProcessed(CtClass<? extends Trackable> candidate) {
+        return candidate.getSuperInterfaces().contains(getFactory().createCtTypeReference(Trackable.class));
+    }
+
+    @Override
     public void process(CtClass<? extends Trackable> ctClass) {
         steps = new Steps(getFactory(), ctClass);
 
@@ -46,9 +51,6 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
         List<CtMethod<?>> methods = steps.getTrackedMethods();
 
         for (CtMethod<?> method : methods) {
-            if (method.getSimpleName().equals("invokeMethod")) {
-                System.out.println();
-            }
             Collection<CtField<?>> editableFields = method.hasAnnotation(Assign.class)
                     ? steps.getAssignedFields(method)
                     : steps.analyser(analysingStrategy).getEditableFieldsFromMethod(method);

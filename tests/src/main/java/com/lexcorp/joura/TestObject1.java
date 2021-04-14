@@ -31,6 +31,14 @@ public class TestObject1 implements Trackable {
         method(value2, value1, integers);
     }
 
+    public void referenceMethod() {
+        Trackable ref1 = this;
+        TestObject1 ref2 = this;
+        ref2.value1 = 100;
+        method(value2, value1, integers);
+        method(this.value2, this.value1, this.integers);
+    }
+
     @Assign(fields = {"value2", "value1"})
     public void update() {
         System.out.println("Hello");

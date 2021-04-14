@@ -17,13 +17,18 @@ public class TrackingTest {
     private static final String TEST_CLASS_1 = TestObject1.class.getName();
     private static final String TEST_CLASS_2 = TestObject2.class.getName();
     private static final String TEST_CLASS_3 = TestObject3.class.getName();
+    private static final String TEST_CLASS_4 = TestObject4.class.getName();
+    private static final String MAIN = TestSpooner.class.getName();
+
 
     @BeforeAll
     static void setUp() throws Exception {
         spooner = new TestSpooner()
                 .addSource(new File("src/main/java/" + TEST_CLASS_1.replaceAll("\\.", "/") + ".java"))
                 .addSource(new File("src/main/java/" + TEST_CLASS_2.replaceAll("\\.", "/") + ".java"))
-                .addSource(new File("src/main/java/" + TEST_CLASS_3.replaceAll("\\.", "/") + ".java"));
+                .addSource(new File("src/main/java/" + TEST_CLASS_3.replaceAll("\\.", "/") + ".java"))
+                .addSource(new File("src/main/java/" + TEST_CLASS_4.replaceAll("\\.", "/") + ".java"))
+                .addSource(new File("src/main/java/" + MAIN.replaceAll("\\.", "/") + ".java"));
     }
 
     @Test
@@ -55,6 +60,12 @@ public class TrackingTest {
         clz3.getMethod("update").invoke(instance3);
         clz3.getMethod("startTrack").invoke(instance3);
         clz3.getMethod("update").invoke(instance3);
+
+        System.out.println("_______________________________________");
+        Class clz4 = spooner.getSpoonedClass(TEST_CLASS_4);
+        Object instance4 = clz4.getDeclaredConstructors()[0].newInstance();
+
+        clz4.getMethod("startTrack").invoke(instance4);
 
 //        Assert.assertEquals(20, clz.getDeclaredField("lastResult").getInt(instance));
 //        Assert.assertEquals(2, Container.CONTAINER.buff.size());
