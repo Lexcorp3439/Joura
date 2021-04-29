@@ -41,6 +41,8 @@ public class Analyser {
         switch (strategy) {
             case NONE:
                 return this.classFields;
+            case LAZY:
+                return getEditableFieldsFromMethodWithLazyInvocationAnalysis(method);
             case DEFAULT:
                 return getEditableFieldsFromMethodWithLiteInvocationAnalysis(method);
             case DEEP:
@@ -54,13 +56,12 @@ public class Analyser {
         Set<CtField<?>> editableFields = new HashSet<>();
         method.getElements(e -> e instanceof CtInvocation).stream()
                 .map(e -> e.getElements(element -> element instanceof CtFieldReference))
-                .forEach(ctElementList -> {
-                    ctElementList.forEach(ctElement ->
-                            editableFields.add((((CtFieldRead<?>) ctElement.getParent()).getVariable()).getFieldDeclaration()));
-                });
-        method.getElements(e -> e instanceof CtFieldWrite).forEach(ctElement -> {
-                    editableFields.add(((CtFieldWrite<?>) ctElement).getVariable().getFieldDeclaration());
-                }
+                .forEach(ctElementList -> ctElementList.forEach(ctElement -> {
+                    CtField<?> field = (((CtFieldRead<?>) ctElement.getParent()).getVariable()).getFieldDeclaration();
+                    editableFields.add(field);
+                }));
+        method.getElements(e -> e instanceof CtFieldWrite).forEach(ctElement ->
+                editableFields.add(((CtFieldWrite<?>) ctElement).getVariable().getFieldDeclaration())
         );
         editableFields.retainAll(classFields);
         return editableFields.stream()
@@ -74,8 +75,8 @@ public class Analyser {
     private List<CtField<?>> getEditableFieldsFromMethodWithLiteInvocationAnalysis(CtMethod<?> method) {
         Set<CtField<?>> editableFields = new HashSet<>();
         PointAnalysis pointAnalysis = new PointAnalysis(classFields.get(0).getParent(CtClass.class), method);
+        pointAnalysis.run();
         method.getBody().getStatements().forEach(ctStatement -> {
-            pointAnalysis.nextIteration();
             this.addUpdatedFieldsForCurrentIteration(ctStatement, pointAnalysis, editableFields);
             this.addFieldsPassedToMethod(ctStatement, pointAnalysis, editableFields);
         });

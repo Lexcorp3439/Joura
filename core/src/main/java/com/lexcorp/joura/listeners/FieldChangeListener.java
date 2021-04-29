@@ -23,6 +23,7 @@ public class FieldChangeListener {
     private FieldChangeListener() {
     }
 
+    @SuppressWarnings("unused")
     public <T extends Trackable> void accept(T trackable, String methodName, Map<String, Object> fields) {
         log.info(methodName);
         log.info(fields.toString());

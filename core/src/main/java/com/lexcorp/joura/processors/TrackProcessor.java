@@ -51,6 +51,10 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
         List<CtMethod<?>> methods = steps.getTrackedMethods();
 
         for (CtMethod<?> method : methods) {
+            if (method.getSimpleName().equals("referenceMethod")) {
+                System.out.println();
+            }
+
             Collection<CtField<?>> editableFields = method.hasAnnotation(Assign.class)
                     ? steps.getAssignedFields(method)
                     : steps.analyser(analysingStrategy).getEditableFieldsFromMethod(method);

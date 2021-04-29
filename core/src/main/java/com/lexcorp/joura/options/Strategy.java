@@ -1,5 +1,5 @@
 package com.lexcorp.joura.options;
 
 public enum Strategy {
-    NONE, DEFAULT, DEEP;
+    NONE, LAZY, DEFAULT, DEEP;
 }
