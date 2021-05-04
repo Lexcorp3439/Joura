@@ -1,4 +1,4 @@
-package com.lexcorp.joura;
+package com.lexcorp.joura.runtime;
 
 public interface Trackable {
 

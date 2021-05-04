@@ -77,7 +77,7 @@
                     <debug>true</debug>
                     <processors>
                         <processor>
-                            com.lexcorp.joura.processors.TrackProcessor
+                            com.lexcorp.joura.compile.processors.TrackProcessor
                         </processor>
                     </processors>
                 </configuration>

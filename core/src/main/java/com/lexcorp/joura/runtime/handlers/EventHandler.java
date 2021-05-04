@@ -1,8 +1,8 @@
-package com.lexcorp.joura.handlers;
+package com.lexcorp.joura.runtime.handlers;
 
 import java.util.Map;
 
-import com.lexcorp.joura.Trackable;
+import com.lexcorp.joura.runtime.Trackable;
 
 @FunctionalInterface
 public interface EventHandler {

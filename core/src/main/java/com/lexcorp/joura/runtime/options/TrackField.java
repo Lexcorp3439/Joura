@@ -1,4 +1,4 @@
-package com.lexcorp.joura.options;
+package com.lexcorp.joura.runtime.options;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,6 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(value = {ElementType.METHOD, ElementType.FIELD})
-public @interface Untracked {
+@Target(value = ElementType.FIELD)
+public @interface TrackField {
 }

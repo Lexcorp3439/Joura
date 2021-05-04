@@ -1,4 +1,4 @@
-package com.lexcorp.joura.analysis;
+package com.lexcorp.joura.compile.analysis;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,11 +9,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.lexcorp.joura.options.Assign;
-import com.lexcorp.joura.options.Strategy;
-import com.lexcorp.joura.options.TrackField;
-import com.lexcorp.joura.options.TrackInitializer;
-import com.lexcorp.joura.options.Untracked;
+import com.lexcorp.joura.runtime.options.Assign;
+import com.lexcorp.joura.runtime.options.Strategy;
+import com.lexcorp.joura.runtime.options.TrackField;
+import com.lexcorp.joura.runtime.options.TrackInitializer;
+import com.lexcorp.joura.runtime.options.Untracked;
 import com.lexcorp.joura.utils.CtHelper;
 
 import spoon.reflect.code.CtBlock;
@@ -38,18 +38,19 @@ import spoon.reflect.reference.CtTypeReference;
 import static com.lexcorp.joura.utils.StringHelper.createFieldName;
 
 public class Steps {
-
     private final Factory factory;
     private final CtHelper ctHelper;
     private final CtClass<?> ctClass;
     private CtField<Boolean> trackField;
     private List<CtField<?>> fields;
     private List<CtMethod<?>> methods;
+    private Analyser analyser;
 
     public Steps(Factory factory, CtClass<?> ctClass) {
         this.factory = factory;
         this.ctHelper = new CtHelper(factory);
         this.ctClass = ctClass;
+        this.analyser = new Analyser(this.getFields(), Collections.singleton(trackField));
     }
 
     public List<CtField<?>> getFields() {
@@ -79,7 +80,7 @@ public class Steps {
     }
 
     public Analyser analyser(Strategy strategy) {
-        return new Analyser(strategy, this.getFields(), Collections.singleton(trackField));
+        return analyser.setStrategy(strategy);
     }
 
     public CtField<Boolean> createClassTrackFieldIfNotAssigned(boolean defaultValue) {
@@ -174,7 +175,7 @@ public class Steps {
         thenStatement.addStatement(mapStatement);
 
         CtStatement invocationStatement = ctHelper.createFormatCodeSnippet(
-                "com.lexcorp.joura.listeners.FieldChangeListener.getInstance().accept(this, \"%s\", map123456678)",
+                "com.lexcorp.joura.runtime.listeners.FieldChangeListener.getInstance().accept(this, \"%s\", map123456678)",
                 method.getSimpleName()
         );
         thenStatement.addStatement(invocationStatement);

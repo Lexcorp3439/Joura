@@ -3,8 +3,9 @@ package com.lexcorp.joura;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.lexcorp.joura.options.Assign;
-import com.lexcorp.joura.options.TrackInitializer;
+import com.lexcorp.joura.runtime.Trackable;
+import com.lexcorp.joura.runtime.options.Assign;
+import com.lexcorp.joura.runtime.options.TrackInitializer;
 
 import static com.lexcorp.joura.StaticMethods.method;
 
@@ -34,9 +35,10 @@ public class TestObject1 implements Trackable {
     public void referenceMethod() {
         Trackable ref1 = this;
         TestObject1 ref2 = this;
+        value2 = 12;
         ref2.value1 = 100;
         method(value2, value1, integers);
-        method(this.value2, this.value1, this.integers);
+//        method(this.value2, this.value1, this.integers);
     }
 
     @Assign(fields = {"value2", "value1"})

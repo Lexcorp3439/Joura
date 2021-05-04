@@ -1,4 +1,4 @@
-package com.lexcorp.joura.listeners;
+package com.lexcorp.joura.runtime.listeners;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import com.lexcorp.joura.Trackable;
-import com.lexcorp.joura.handlers.EventHandler;
+import com.lexcorp.joura.runtime.Trackable;
+import com.lexcorp.joura.runtime.handlers.EventHandler;
 
 public class FieldChangeListener {
     private final Logger log = Logger.getLogger(FieldChangeListener.class.getName());

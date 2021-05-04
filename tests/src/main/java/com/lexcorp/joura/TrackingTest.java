@@ -5,7 +5,7 @@ import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.lexcorp.joura.processors.TrackProcessor;
+import com.lexcorp.joura.compile.processors.TrackProcessor;
 import com.lexcorp.joura.utils.TestSpooner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;

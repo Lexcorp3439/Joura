@@ -1,14 +1,14 @@
-package com.lexcorp.joura.processors;
+package com.lexcorp.joura.compile.processors;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.lexcorp.joura.Trackable;
-import com.lexcorp.joura.analysis.Steps;
-import com.lexcorp.joura.options.Assign;
-import com.lexcorp.joura.options.Strategy;
-import com.lexcorp.joura.options.TrackOptions;
+import com.lexcorp.joura.compile.analysis.Steps;
+import com.lexcorp.joura.runtime.Trackable;
+import com.lexcorp.joura.runtime.options.Assign;
+import com.lexcorp.joura.runtime.options.Strategy;
+import com.lexcorp.joura.runtime.options.TrackOptions;
 
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtStatement;

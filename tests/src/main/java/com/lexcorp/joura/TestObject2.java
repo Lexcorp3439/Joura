@@ -3,10 +3,11 @@ package com.lexcorp.joura;
 import java.util.HashMap;
 import java.util.List;
 
-import com.lexcorp.joura.options.Strategy;
-import com.lexcorp.joura.options.TrackField;
-import com.lexcorp.joura.options.TrackOptions;
-import com.lexcorp.joura.options.Untracked;
+import com.lexcorp.joura.runtime.Trackable;
+import com.lexcorp.joura.runtime.options.Strategy;
+import com.lexcorp.joura.runtime.options.TrackField;
+import com.lexcorp.joura.runtime.options.TrackOptions;
+import com.lexcorp.joura.runtime.options.Untracked;
 
 
 @TrackOptions(alwaysTrack = true, analysingStrategy = Strategy.NONE)

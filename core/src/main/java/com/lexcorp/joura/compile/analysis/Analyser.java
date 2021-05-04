@@ -1,4 +1,4 @@
-package com.lexcorp.joura.analysis;
+package com.lexcorp.joura.compile.analysis;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.lexcorp.joura.analysis.point.PointAnalysis;
-import com.lexcorp.joura.options.Strategy;
+import com.lexcorp.joura.compile.analysis.alias.AliasAnalysis;
+import com.lexcorp.joura.runtime.options.Strategy;
 
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExpression;
@@ -26,12 +26,26 @@ import spoon.reflect.reference.CtFieldReference;
 
 public class Analyser {
     private final List<CtField<?>> classFields;
-    private final Strategy strategy;
+    private Strategy strategy;
+    private final AliasAnalysis aliasAnalysis;
 
     public Analyser(Strategy strategy, List<CtField<?>> classFields, Collection<CtField<?>> ignoreClassFields) {
         classFields.removeAll(ignoreClassFields);
         this.classFields = classFields;
         this.strategy = strategy;
+        this.aliasAnalysis = new AliasAnalysis(classFields.get(0).getParent(CtClass.class));
+    }
+
+    public Analyser(List<CtField<?>> classFields, Collection<CtField<?>> ignoreClassFields) {
+        classFields.removeAll(ignoreClassFields);
+        this.classFields = classFields;
+        this.strategy = null;
+        this.aliasAnalysis = new AliasAnalysis(classFields.get(0).getParent(CtClass.class));
+    }
+
+    public Analyser setStrategy(Strategy strategy) {
+        this.strategy = strategy;
+        return this;
     }
 
     public List<CtField<?>> getEditableFieldsFromMethod(CtMethod<?> method) {
@@ -74,11 +88,10 @@ public class Analyser {
 
     private List<CtField<?>> getEditableFieldsFromMethodWithLiteInvocationAnalysis(CtMethod<?> method) {
         Set<CtField<?>> editableFields = new HashSet<>();
-        PointAnalysis pointAnalysis = new PointAnalysis(classFields.get(0).getParent(CtClass.class), method);
-        pointAnalysis.run();
+        aliasAnalysis.runForMethod(method);
         method.getBody().getStatements().forEach(ctStatement -> {
-            this.addUpdatedFieldsForCurrentIteration(ctStatement, pointAnalysis, editableFields);
-            this.addFieldsPassedToMethod(ctStatement, pointAnalysis, editableFields);
+            this.addUpdatedFieldsForCurrentIteration(ctStatement, editableFields);
+            this.addFieldsPassedToMethod(ctStatement, editableFields);
         });
         editableFields.retainAll(classFields);
         return new ArrayList<>(editableFields);
@@ -93,19 +106,18 @@ public class Analyser {
      * Метод анализирует и добавляет те поля, которые ссылаются на this и были изменены присвоением
      *
      * @param ctStatement    текущий ctStatement кода
-     * @param pointAnalysis  инстанс анализатора указателей
      * @param editableFields множество изменненных полей в методе
      */
     private void addUpdatedFieldsForCurrentIteration(
-            CtStatement ctStatement, PointAnalysis pointAnalysis, Set<CtField<?>> editableFields) {
+            CtStatement ctStatement, Set<CtField<?>> editableFields) {
         if (ctStatement instanceof CtAssignment) {
             CtExpression<?> assignment = ((CtAssignment<?, ?>) ctStatement).getAssigned();
             if (assignment instanceof CtFieldWrite) {
                 CtFieldWrite<?> fieldWrite = (CtFieldWrite<?>) assignment;
                 CtField<?> field = fieldWrite.getVariable().getFieldDeclaration();
                 if (fieldWrite.getTarget() instanceof CtVariableRead) {
-                    String varName = ((CtVariableRead<?>) fieldWrite.getTarget()).getVariable().getSimpleName();
-                    if (pointAnalysis.isThisPointer(varName)) {
+//                    String varName = ((CtVariableRead<?>) fieldWrite.getTarget()).getVariable().getSimpleName();
+                    if (aliasAnalysis.isThisAlias(fieldWrite.getTarget().toString())) {
                         editableFields.add(field);
                     }
                 } else {
@@ -119,11 +131,10 @@ public class Analyser {
      * Метод анализирует и добавляет те поля, которые ссылаются на this и переданы в какой-либо метод
      *
      * @param ctStatement    текущий ctStatement кода
-     * @param pointAnalysis  инстанс анализатора указателей
      * @param editableFields множество изменненных полей в методе
      */
     private void addFieldsPassedToMethod(
-            CtStatement ctStatement, PointAnalysis pointAnalysis, Set<CtField<?>> editableFields
+            CtStatement ctStatement, Set<CtField<?>> editableFields
     ) {
         ctStatement.getElements(e -> e instanceof CtInvocation).stream()
                 .map(e -> e.getElements(element -> element instanceof CtFieldReference))
@@ -134,7 +145,7 @@ public class Analyser {
                         editableFields.add(field);
                     } else if (fieldRead.getTarget() instanceof CtVariableRead) {
                         String varName = ((CtVariableRead<?>) fieldRead.getTarget()).getVariable().getSimpleName();
-                        if (pointAnalysis.isThisPointer(varName)) {
+                        if (aliasAnalysis.isThisAlias(varName)) {
                             editableFields.add(field);
                         }
                     }

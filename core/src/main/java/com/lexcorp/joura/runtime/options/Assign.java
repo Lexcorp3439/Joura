@@ -1,4 +1,4 @@
-package com.lexcorp.joura.options;
+package com.lexcorp.joura.runtime.options;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

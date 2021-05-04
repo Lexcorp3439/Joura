@@ -1,5 +1,7 @@
 package com.lexcorp.joura;
 
+import com.lexcorp.joura.runtime.Trackable;
+
 public class TestObject3 extends TestObject2 implements Trackable {
     public int value1213;
 
