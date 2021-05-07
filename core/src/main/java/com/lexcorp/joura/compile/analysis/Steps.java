@@ -16,21 +16,8 @@ import com.lexcorp.joura.runtime.options.TrackInitializer;
 import com.lexcorp.joura.runtime.options.Untracked;
 import com.lexcorp.joura.utils.CtHelper;
 
-import spoon.reflect.code.CtBlock;
-import spoon.reflect.code.CtFieldRead;
-import spoon.reflect.code.CtFieldWrite;
-import spoon.reflect.code.CtInvocation;
-import spoon.reflect.code.CtLiteral;
-import spoon.reflect.code.CtLocalVariable;
-import spoon.reflect.code.CtReturn;
-import spoon.reflect.code.CtStatement;
-import spoon.reflect.code.CtUnaryOperator;
-import spoon.reflect.code.CtVariableRead;
-import spoon.reflect.code.UnaryOperatorKind;
-import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.ModifierKind;
+import spoon.reflect.code.*;
+import spoon.reflect.declaration.*;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -42,6 +29,7 @@ public class Steps {
     private final CtHelper ctHelper;
     private final CtClass<?> ctClass;
     private CtField<Boolean> trackField;
+    private CtField<String> identifierField;
     private List<CtField<?>> fields;
     private List<CtMethod<?>> methods;
     private Analyser analyser;
@@ -104,6 +92,38 @@ public class Steps {
         }
         trackField.setDocComment("Tracking flag");
         return trackField;
+    }
+
+    public CtField<String> createIdentifierField() {
+        CtTypeReference<String> typeReference = factory.Type().STRING;
+        CtLiteral<String> ctLiteral = ctHelper.createCtLiteral("UNKNOWN", typeReference);
+        identifierField = ctHelper.createCtField(createFieldName(), factory.Type().STRING, ctLiteral);
+        identifierField.setDocComment("Identifier");
+        return identifierField;
+    }
+
+    public CtMethod<Void> createSetIdentifierMethod() {
+        CtParameter<String> parameter = ctHelper.createCtParameter(factory.Type().STRING, "newIdentifier");
+        CtMethod<Void> setIdentifierMethod = ctHelper.createMethodWithParameters(
+                "setIdentifier", factory.Type().VOID_PRIMITIVE,
+                Collections.singleton(ModifierKind.PUBLIC), List.of(parameter));
+        CtFieldWrite<String> ctFieldWrite = ctHelper.createCtFieldWrite(
+                factory.createThisAccess(ctClass.getTypeErasure()), this.identifierField.getReference()
+        );
+
+        CtVariableRead<String> ctVariableRead = ctHelper.createCtVariableRead(parameter.getReference(), false);
+        CtAssignment<String, String> ctAssignment = ctHelper.createCtAssignment(ctFieldWrite, ctVariableRead, factory.Type().STRING);
+        setIdentifierMethod.getBody().insertBegin(ctAssignment);
+        return setIdentifierMethod;
+    }
+
+    public CtMethod<String> createGetIdentifierMethod() {
+        CtMethod<String> getIdentifierMethod = ctHelper.createMethod(
+                "getIdentifier", factory.Type().STRING, Collections.singleton(ModifierKind.PUBLIC));
+        CtFieldRead<String> ctFieldRead = ctHelper.createCtFieldRead(ctClass, identifierField);
+        CtReturn<String> ctReturn = ctHelper.createCtReturn(ctFieldRead);
+        getIdentifierMethod.getBody().insertEnd(ctReturn);
+        return getIdentifierMethod;
     }
 
     public CtMethod<?> createTrackMethodIfNotExist(boolean isStart) {
@@ -176,7 +196,7 @@ public class Steps {
 
         CtStatement invocationStatement = ctHelper.createFormatCodeSnippet(
                 "com.lexcorp.joura.runtime.listeners.FieldChangeListener.getInstance().accept(this, \"%s\", map123456678)",
-                method.getSimpleName()
+                method.getSignature()
         );
         thenStatement.addStatement(invocationStatement);
         return ctHelper.createCtIf(condition, thenStatement, null);

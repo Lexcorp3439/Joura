@@ -11,6 +11,14 @@ public class Instance {
     }
 
     enum Type {
-        THIS, UNKNOWN, NEW
+        THIS, UNKNOWN, NEW, ARGUMENT
+    }
+
+    @Override
+    public String toString() {
+        return "Instance{" +
+                " hash=" + hashCode() +
+                " type=" + type +
+                " }";
     }
 }

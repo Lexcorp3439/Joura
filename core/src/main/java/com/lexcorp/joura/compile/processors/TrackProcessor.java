@@ -1,8 +1,11 @@
 package com.lexcorp.joura.compile.processors;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.lexcorp.joura.compile.analysis.Steps;
 import com.lexcorp.joura.runtime.Trackable;
@@ -10,6 +13,7 @@ import com.lexcorp.joura.runtime.options.Assign;
 import com.lexcorp.joura.runtime.options.Strategy;
 import com.lexcorp.joura.runtime.options.TrackOptions;
 
+import com.lexcorp.joura.tests.ExpectedFields;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
@@ -27,6 +31,7 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
 
     @Override
     public void process(CtClass<? extends Trackable> ctClass) {
+        System.out.println("RUN FOR CLASS " + ctClass.getSimpleName());
         steps = new Steps(getFactory(), ctClass);
 
         TrackOptions trackOptions = ctClass.getAnnotation(TrackOptions.class);
@@ -36,6 +41,15 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
 
         CtField<Boolean> trackField = steps.createClassTrackFieldIfNotAssigned(alwaysTrack);
         ctClass.addField(0, trackField);
+
+        CtField<String> identifierField = steps.createIdentifierField();
+        ctClass.addField(1, identifierField);
+
+        CtMethod<Void> setIdentifierMethod = steps.createSetIdentifierMethod();
+        ctClass.addMethod(setIdentifierMethod);
+
+        CtMethod<String> getIdentifierMethod = steps.createGetIdentifierMethod();
+        ctClass.addMethod(getIdentifierMethod);
 
         if (!alwaysTrack) {
             CtMethod<?> startTrack = steps.createTrackMethodIfNotExist(true);
@@ -51,13 +65,26 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
         List<CtMethod<?>> methods = steps.getTrackedMethods();
 
         for (CtMethod<?> method : methods) {
-            if (method.getSimpleName().equals("referenceMethod")) {
+            if (method.getSimpleName().equals("testAssignWithThis")) {
                 System.out.println();
             }
 
             Collection<CtField<?>> editableFields = method.hasAnnotation(Assign.class)
                     ? steps.getAssignedFields(method)
                     : steps.analyser(analysingStrategy).getEditableFieldsFromMethod(method);
+
+            if (method.hasAnnotation(ExpectedFields.class)) {
+                Set<String> actualFields = editableFields.stream()
+                        .map(CtField::getSimpleName)
+                        .collect(Collectors.toSet());
+                Set<String> expectedFields = new java.util.HashSet<>(
+                        Set.of(method.getAnnotation(ExpectedFields.class).fields())
+                );
+                expectedFields.removeAll(actualFields);
+                assert expectedFields.size() == 0: "In method " + method.getSignature() +
+                        " lost expected fields " + expectedFields.toString() +
+                        " actual fields " + actualFields.toString();
+            }
 
             if (editableFields.size() != 0) {
                 CtStatement fieldChangeNotifierStatement = steps.createFieldChangeNotifierStatement(

@@ -1,23 +1,11 @@
 package com.lexcorp.joura.utils;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
-import spoon.reflect.code.CtAssignment;
-import spoon.reflect.code.CtCodeSnippetStatement;
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtFieldRead;
-import spoon.reflect.code.CtFieldWrite;
-import spoon.reflect.code.CtIf;
-import spoon.reflect.code.CtLiteral;
-import spoon.reflect.code.CtLocalVariable;
-import spoon.reflect.code.CtStatement;
-import spoon.reflect.code.CtThisAccess;
-import spoon.reflect.code.CtVariableRead;
-import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.declaration.ModifierKind;
+import spoon.reflect.code.*;
+import spoon.reflect.declaration.*;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
@@ -61,6 +49,25 @@ public class CtHelper {
         method.setModifiers(modifiers);
         method.setBody(factory.createBlock());
         return method;
+    }
+
+    public <T> CtMethod<T> createMethodWithParameters(
+            String methodName, CtTypeReference<T> typeReference, Set<ModifierKind> modifiers, List<CtParameter<?>> parameters
+    ) {
+        CtMethod<T> method = factory.Core().createMethod();
+        method.setSimpleName(methodName);
+        method.setType(typeReference);
+        method.setParameters(parameters);
+        method.setModifiers(modifiers);
+        method.setBody(factory.createBlock());
+        return method;
+    }
+
+    public <T> CtParameter<T> createCtParameter(CtTypeReference<T> type, String name) {
+        CtParameter<T> ctParameter = factory.createParameter();
+        ctParameter.setType(type);
+        ctParameter.setSimpleName(name);
+        return ctParameter;
     }
 
     public <T> CtLiteral<T> createCtLiteral(T value, CtTypeReference<T> type) {
@@ -114,6 +121,12 @@ public class CtHelper {
 //        factory.createExecutableReference().s
 //        factory.createInvocation()
 //    }
+
+    public <T> CtReturn<T> createCtReturn(CtExpression<T> ctExpression) {
+        CtReturn<T> ctReturn = factory.createReturn();
+        ctReturn.setReturnedExpression(ctExpression);
+        return ctReturn;
+    }
 
     public CtIf createCtIf(CtExpression<Boolean> condition, CtStatement thenStatement, CtStatement elseStatement) {
         CtIf ctIf = factory.createIf();

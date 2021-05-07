@@ -30,6 +30,15 @@ public class Alias {
         return instances.contains(Instance.THIS);
     }
 
+    public boolean containsUnknown() {
+        for (Instance instance : instances) {
+            if (instance.type == Instance.Type.UNKNOWN) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -49,6 +58,6 @@ public class Alias {
 
     @Override
     public String toString() {
-        return "Point( " + name + " )";
+        return instances.toString();
     }
 }

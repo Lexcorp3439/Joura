@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.lexcorp.joura.compile.analysis.alias.AliasAnalysis;
+import com.lexcorp.joura.compile.analysis.alias.Aliases;
 import com.lexcorp.joura.runtime.options.Strategy;
 
 import spoon.reflect.code.CtAssignment;
@@ -20,6 +21,7 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtFieldReference;
@@ -88,11 +90,17 @@ public class Analyser {
 
     private List<CtField<?>> getEditableFieldsFromMethodWithLiteInvocationAnalysis(CtMethod<?> method) {
         Set<CtField<?>> editableFields = new HashSet<>();
-        aliasAnalysis.runForMethod(method);
-        method.getBody().getStatements().forEach(ctStatement -> {
-            this.addUpdatedFieldsForCurrentIteration(ctStatement, editableFields);
-            this.addFieldsPassedToMethod(ctStatement, editableFields);
-        });
+        aliasAnalysis.run();
+        if (method.getSimpleName().equals("referenceMethod")) {
+            System.out.println();
+        }
+        method.getElements(e -> e instanceof CtAssignment)
+                .forEach(e -> this.addUpdatedFieldsForCurrentIteration(
+                        (CtAssignment<?, ?>) e, editableFields, aliasAnalysis.method(method)
+                ));
+        method.getElements(e -> e instanceof CtInvocation).stream()
+                .map(e -> e.getElements(element -> element instanceof CtFieldReference))
+                .forEach(e -> this.addFieldsPassedToMethod(e, editableFields, aliasAnalysis.method(method)));
         editableFields.retainAll(classFields);
         return new ArrayList<>(editableFields);
 
@@ -105,24 +113,32 @@ public class Analyser {
     /**
      * Метод анализирует и добавляет те поля, которые ссылаются на this и были изменены присвоением
      *
-     * @param ctStatement    текущий ctStatement кода
+     * @param ctAssignment   текущий ctAssignment кода
      * @param editableFields множество изменненных полей в методе
      */
     private void addUpdatedFieldsForCurrentIteration(
-            CtStatement ctStatement, Set<CtField<?>> editableFields) {
-        if (ctStatement instanceof CtAssignment) {
-            CtExpression<?> assignment = ((CtAssignment<?, ?>) ctStatement).getAssigned();
-            if (assignment instanceof CtFieldWrite) {
-                CtFieldWrite<?> fieldWrite = (CtFieldWrite<?>) assignment;
-                CtField<?> field = fieldWrite.getVariable().getFieldDeclaration();
-                if (fieldWrite.getTarget() instanceof CtVariableRead) {
-//                    String varName = ((CtVariableRead<?>) fieldWrite.getTarget()).getVariable().getSimpleName();
-                    if (aliasAnalysis.isThisAlias(fieldWrite.getTarget().toString())) {
+            CtAssignment<?, ?> ctAssignment, Set<CtField<?>> editableFields, Aliases aliases) {
+        CtExpression<?> assigned = ctAssignment.getAssigned();
+        if (assigned instanceof CtFieldWrite) {
+            CtFieldWrite<?> fieldWrite = (CtFieldWrite<?>) assigned;
+            CtField<?> field = fieldWrite.getVariable().getFieldDeclaration();
+            if (fieldWrite.getTarget() instanceof CtVariableRead) {
+                if (fieldWrite.getTarget() instanceof CtFieldRead) {
+                    CtFieldRead<?> ctFieldRead = (CtFieldRead<?>) fieldWrite.getTarget();
+                    if (aliasAnalysis.isTrackable(ctFieldRead.getVariable().getType())) {
                         editableFields.add(field);
                     }
                 } else {
-                    editableFields.add(field);
+//                    String varName = ((CtVariableRead<?>) fieldWrite.getTarget()).getVariable().getSimpleName();
+                    String reference = fieldWrite.getTarget().toString();
+                    boolean is_method_alias = aliases.isThisOrUnknownAlias(reference);
+                    boolean is_class_field_alias = aliasAnalysis.fieldAliases.isThisOrUnknownAlias(reference);
+                    if (is_method_alias || is_class_field_alias) {
+                        editableFields.add(field);
+                    }
                 }
+            } else {
+                editableFields.add(field);
             }
         }
     }
@@ -130,26 +146,33 @@ public class Analyser {
     /**
      * Метод анализирует и добавляет те поля, которые ссылаются на this и переданы в какой-либо метод
      *
-     * @param ctStatement    текущий ctStatement кода
+     * @param ctElementList  список
      * @param editableFields множество изменненных полей в методе
      */
     private void addFieldsPassedToMethod(
-            CtStatement ctStatement, Set<CtField<?>> editableFields
+            List<CtElement> ctElementList, Set<CtField<?>> editableFields, Aliases aliases
     ) {
-        ctStatement.getElements(e -> e instanceof CtInvocation).stream()
-                .map(e -> e.getElements(element -> element instanceof CtFieldReference))
-                .forEach(ctElementList -> ctElementList.forEach(ctElement -> {
-                    CtFieldRead<?> fieldRead = (CtFieldRead<?>) ctElement.getParent();
-                    CtField<?> field = fieldRead.getVariable().getFieldDeclaration();
-                    if (fieldRead.getTarget() instanceof CtThisAccess) {
+        ctElementList.forEach(ctElement -> {
+            CtFieldRead<?> fieldRead = (CtFieldRead<?>) ctElement.getParent();
+            CtField<?> field = fieldRead.getVariable().getFieldDeclaration();
+            if (fieldRead.getTarget() instanceof CtThisAccess) {
+                editableFields.add(field);
+            } else if (fieldRead.getTarget() instanceof CtVariableRead) {
+                if (fieldRead.getTarget() instanceof CtFieldRead) {
+                    CtFieldRead<?> ctFieldRead = (CtFieldRead<?>) fieldRead.getTarget();
+                    if (aliasAnalysis.isTrackable(ctFieldRead.getVariable().getType())) {
                         editableFields.add(field);
-                    } else if (fieldRead.getTarget() instanceof CtVariableRead) {
-                        String varName = ((CtVariableRead<?>) fieldRead.getTarget()).getVariable().getSimpleName();
-                        if (aliasAnalysis.isThisAlias(varName)) {
-                            editableFields.add(field);
-                        }
                     }
-                }));
+                } else {
+                    String reference = fieldRead.getTarget().toString();
+                    boolean is_method_alias = aliases.isThisOrUnknownAlias(reference);
+                    boolean is_class_field_alias = aliasAnalysis.fieldAliases.isThisOrUnknownAlias(reference);
+                    if (is_method_alias || is_class_field_alias) {
+                        editableFields.add(field);
+                    }
+                }
+            }
+        });
     }
 
 }

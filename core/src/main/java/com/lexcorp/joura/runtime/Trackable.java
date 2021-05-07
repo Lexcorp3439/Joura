@@ -6,4 +6,7 @@ public interface Trackable {
 
     default void stopTrack() {}
 
+    default void setIdentifier(String newIdentifier) {}
+
+    default String getIdentifier() {return "UNKNOWN";}
 }

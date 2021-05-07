@@ -1,19 +1,21 @@
 package com.lexcorp.joura.runtime.listeners;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
+import java.util.*;
+import java.util.function.Consumer;
 
 import com.lexcorp.joura.runtime.Trackable;
 import com.lexcorp.joura.runtime.handlers.EventHandler;
+import com.lexcorp.joura.runtime.handlers.Log4JEventHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FieldChangeListener {
-    private final Logger log = Logger.getLogger(FieldChangeListener.class.getName());
+    //    private final Logger log = Logger.getLogger(FieldChangeListener.class.getName());
+    private static final Logger log = LogManager.getLogger(Log4JEventHandler.class);
     private static final FieldChangeListener INSTANCE = new FieldChangeListener();
     private final List<EventHandler> eventHandlers = new ArrayList<>();
     private final Map<Trackable, List<EventHandler>> instanceEventHandlers = new HashMap<>();
+    private final Map<Trackable, Long> instancesId = new HashMap<>();
     private final Map<Class<? extends Trackable>, List<EventHandler>> classEventHandlers = new HashMap<>();
 
     public static FieldChangeListener getInstance() {
@@ -25,15 +27,15 @@ public class FieldChangeListener {
 
     @SuppressWarnings("unused")
     public <T extends Trackable> void accept(T trackable, String methodName, Map<String, Object> fields) {
-        log.info(methodName);
-        log.info(fields.toString());
-        log.info(trackable.getClass().getName());
-        eventHandlers.forEach(handler -> handler.accept(trackable, methodName, fields));
+        Long id = Optional.ofNullable(instancesId.get(trackable)).orElse((long) instancesId.size());
+        Consumer<EventHandler> consumer = handler -> handler.accept(id, trackable, methodName, fields);
+
+        eventHandlers.forEach(consumer);
         if (instanceEventHandlers.containsKey(trackable)) {
-            instanceEventHandlers.get(trackable).forEach(handler -> handler.accept(trackable, methodName, fields));
+            instanceEventHandlers.get(trackable).forEach(consumer);
         }
         if (classEventHandlers.containsKey(trackable.getClass())) {
-            classEventHandlers.get(trackable.getClass()).forEach(handler -> handler.accept(trackable, methodName, fields));
+            classEventHandlers.get(trackable.getClass()).forEach(consumer);
         }
     }
 
