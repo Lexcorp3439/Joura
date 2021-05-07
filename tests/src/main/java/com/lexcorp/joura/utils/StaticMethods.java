@@ -1,4 +1,4 @@
-package com.lexcorp.joura;
+package com.lexcorp.joura.utils;
 
 import java.util.List;
 
