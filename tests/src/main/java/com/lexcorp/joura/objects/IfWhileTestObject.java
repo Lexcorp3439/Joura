@@ -1,9 +1,9 @@
 package com.lexcorp.joura.objects;
 
-import com.lexcorp.joura.runtime.Trackable;
-import com.lexcorp.joura.tests.ExpectedFields;
-
 import java.util.Random;
+
+import com.lexcorp.joura.runtime.Trackable;
+import com.lexcorp.joura.runtime.options.test.ExpectedFields;
 
 import static com.lexcorp.joura.utils.StaticMethods.method;
 

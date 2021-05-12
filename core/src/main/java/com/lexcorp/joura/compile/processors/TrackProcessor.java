@@ -1,27 +1,30 @@
 package com.lexcorp.joura.compile.processors;
 
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import com.lexcorp.joura.compile.analysis.Steps;
+import com.lexcorp.joura.logger.JouraLogger;
 import com.lexcorp.joura.runtime.Trackable;
+import com.lexcorp.joura.runtime.handlers.Log4JEventHandler;
 import com.lexcorp.joura.runtime.options.Assign;
 import com.lexcorp.joura.runtime.options.Strategy;
 import com.lexcorp.joura.runtime.options.TrackOptions;
+import com.lexcorp.joura.runtime.options.test.ExpectedFields;
 
-import com.lexcorp.joura.tests.ExpectedFields;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 
+import static com.lexcorp.joura.logger.Markers.Compile.EXPECTED_FIELDS_MARKER;
+import static com.lexcorp.joura.logger.Markers.Compile.RECEIVED_FIELDS_MARKER;
+
 public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackable>> {
-    private final Logger log = Logger.getLogger(TrackProcessor.class.getName());
+    private static final JouraLogger logger = JouraLogger.get(Log4JEventHandler.class);
     private Steps steps;
 
     @Override
@@ -35,9 +38,14 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
         steps = new Steps(getFactory(), ctClass);
 
         TrackOptions trackOptions = ctClass.getAnnotation(TrackOptions.class);
-        boolean alwaysTrack = trackOptions != null && trackOptions.alwaysTrack();
-        Strategy analysingStrategy = trackOptions == null ? Strategy.DEFAULT : trackOptions.analysingStrategy();
+        Strategy analysingStrategy = trackOptions == null
+                ? Strategy.ALIAS_ANALYSIS
+                : trackOptions.strategy();
+        steps.setUpAnalyser(analysingStrategy);
 
+        boolean alwaysTrack = analysingStrategy == Strategy.ALWAYS_TRACK;
+
+        List<CtMethod<?>> methods = steps.getTrackedMethods();
 
         CtField<Boolean> trackField = steps.createClassTrackFieldIfNotAssigned(alwaysTrack);
         ctClass.addField(0, trackField);
@@ -62,8 +70,6 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
             }
         }
 
-        List<CtMethod<?>> methods = steps.getTrackedMethods();
-
         for (CtMethod<?> method : methods) {
             if (method.getSimpleName().equals("testAssignWithThis")) {
                 System.out.println();
@@ -71,7 +77,7 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
 
             Collection<CtField<?>> editableFields = method.hasAnnotation(Assign.class)
                     ? steps.getAssignedFields(method)
-                    : steps.analyser(analysingStrategy).getEditableFieldsFromMethod(method);
+                    : steps.analyser().runForMethod(method);
 
             if (method.hasAnnotation(ExpectedFields.class)) {
                 Set<String> actualFields = editableFields.stream()
@@ -80,10 +86,12 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
                 Set<String> expectedFields = new java.util.HashSet<>(
                         Set.of(method.getAnnotation(ExpectedFields.class).fields())
                 );
+                logger.debug(RECEIVED_FIELDS_MARKER, "actual fields " + actualFields);
+                logger.debug(EXPECTED_FIELDS_MARKER, "expected fields " + expectedFields);
                 expectedFields.removeAll(actualFields);
-                assert expectedFields.size() == 0: "In method " + method.getSignature() +
-                        " lost expected fields " + expectedFields.toString() +
-                        " actual fields " + actualFields.toString();
+                assert expectedFields.size() == 0 : "In method " + method.getSignature() +
+                        " lost expected fields " + expectedFields +
+                        " actual fields " + actualFields;
             }
 
             if (editableFields.size() != 0) {

@@ -9,8 +9,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface TrackOptions {
 
-    boolean alwaysTrack() default false;
-
-    Strategy analysingStrategy() default Strategy.DEFAULT;
+    Strategy strategy() default Strategy.ALWAYS_TRACK;
 
 }

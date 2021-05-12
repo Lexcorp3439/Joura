@@ -5,9 +5,7 @@ import java.util.List;
 
 import com.lexcorp.joura.runtime.Trackable;
 import com.lexcorp.joura.runtime.options.Assign;
-import com.lexcorp.joura.tests.ExpectedFields;
-
-import static com.lexcorp.joura.utils.StaticMethods.method;
+import com.lexcorp.joura.runtime.options.test.ExpectedFields;
 
 
 public class SimpleTestObject implements Trackable {
@@ -20,9 +18,9 @@ public class SimpleTestObject implements Trackable {
     public int getValue1() {
         return value1;
     }
-    
+
     @ExpectedFields(fields = {"value1"})
-    public SimpleTestObject testAssignWithThis(int value1) {
+    public SimpleTestObject testAssignWithThis(Integer value1) {
         this.value1 = value1;
         System.out.println(this.value1);
         return this;

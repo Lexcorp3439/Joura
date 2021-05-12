@@ -1,4 +1,4 @@
-package com.lexcorp.joura.tests;
+package com.lexcorp.joura.runtime.options.test;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

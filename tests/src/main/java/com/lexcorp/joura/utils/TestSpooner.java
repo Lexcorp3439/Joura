@@ -9,6 +9,7 @@ import org.eclipse.jdt.internal.compiler.batch.Main;
 
 import spoon.OutputType;
 import spoon.SpoonModelBuilder;
+import spoon.compiler.Environment;
 import spoon.processing.ProcessingManager;
 import spoon.processing.Processor;
 import spoon.reflect.declaration.CtElement;
@@ -22,6 +23,11 @@ import spoon.support.StandardEnvironment;
  */
 public class TestSpooner {
 	final SpoonModelBuilder compiler;
+
+	public TestSpooner(Environment environment) throws Exception {
+		compiler = new TestSpoonCompiler(
+				new FactoryImpl(new DefaultCoreFactory(), environment));
+	}
 
 	public TestSpooner() throws Exception {
 		compiler = new TestSpoonCompiler(

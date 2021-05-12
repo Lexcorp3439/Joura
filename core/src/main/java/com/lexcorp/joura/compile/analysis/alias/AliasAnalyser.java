@@ -1,25 +1,36 @@
 package com.lexcorp.joura.compile.analysis.alias;
 
-import java.util.*;
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
-import com.lexcorp.joura.compile.processors.TrackProcessor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.lexcorp.joura.runtime.Trackable;
-import spoon.reflect.code.*;
+import com.lexcorp.joura.runtime.handlers.Log4JEventHandler;
+
+import spoon.reflect.code.CtAssignment;
+import spoon.reflect.code.CtConstructorCall;
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLocalVariable;
+import spoon.reflect.code.CtThisAccess;
+import spoon.reflect.code.CtVariableRead;
+import spoon.reflect.code.CtVariableWrite;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.factory.Factory;
-import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
 import static com.lexcorp.joura.compile.analysis.alias.Instance.Type;
 
-public class AliasAnalysis {
-    private final Logger logger = Logger.getLogger(AliasAnalysis.class.getName());
+public class AliasAnalyser {
+    private static final Logger logger = LogManager.getLogger(Log4JEventHandler.class);
 
     private final CtClass<?> ctClass;
     public final Aliases fieldAliases = new Aliases();
@@ -27,7 +38,7 @@ public class AliasAnalysis {
     private final HashMap<CtMethod<?>, Aliases> methodAliases;
 
 
-    public AliasAnalysis(CtClass<?> ctClass) {
+    public AliasAnalyser(CtClass<?> ctClass) {
         this.ctClass = ctClass;
         this.methodReturns = new HashMap<>();
         this.methodAliases = new HashMap<>();
@@ -38,7 +49,7 @@ public class AliasAnalysis {
     }
 
     public boolean isTrackable(CtTypeReference<?> typeReference) {
-        Factory factory = ctClass.getFactory();
+        Factory factory = this.ctClass.getFactory();
         CtClass<?> ctClass = factory.Class()
                 .get(typeReference.getQualifiedName());
         if (ctClass == null) {
@@ -48,12 +59,11 @@ public class AliasAnalysis {
     }
 
     public void run() {
-        List<CtMethod<?>> methods = ctClass.getAllMethods().stream()
-                .filter(m -> isTrackable(m.getType()))
-                .collect(Collectors.toList());
-        for (CtMethod<?> method : ctClass.getAllMethods()) {
+        for (CtMethod<?> method : this.ctClass.getAllMethods()) {
             String methodSignature = getMethodSignature(method);
-            methodReturns.put(methodSignature, new HashSet<>());
+            if (isTrackable(method.getType())) {
+                methodReturns.put(methodSignature, new HashSet<>());
+            }
             Aliases aliases = runForMethod(method);
             methodAliases.put(method, aliases);
             aliases.getMap().forEach((name, alias) -> {
@@ -86,6 +96,7 @@ public class AliasAnalysis {
     }
 
     public Aliases method(CtMethod<?> method) {
+        logger.debug("Aliases for method " + method.getSignature());
         return methodAliases.get(method);
     }
 

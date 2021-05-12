@@ -1,7 +1,7 @@
 package com.lexcorp.joura.objects;
 
 import com.lexcorp.joura.runtime.Trackable;
-import com.lexcorp.joura.tests.ExpectedFields;
+import com.lexcorp.joura.runtime.options.test.ExpectedFields;
 
 public class ReferenceTestObject implements Trackable {
     private ReferenceTestObject reference;

@@ -9,6 +9,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.lexcorp.joura.compile.analysis.strategies.AbstractStrategy;
+import com.lexcorp.joura.compile.analysis.strategies.AnalysisStrategy;
 import com.lexcorp.joura.runtime.options.Assign;
 import com.lexcorp.joura.runtime.options.Strategy;
 import com.lexcorp.joura.runtime.options.TrackField;
@@ -16,8 +18,23 @@ import com.lexcorp.joura.runtime.options.TrackInitializer;
 import com.lexcorp.joura.runtime.options.Untracked;
 import com.lexcorp.joura.utils.CtHelper;
 
-import spoon.reflect.code.*;
-import spoon.reflect.declaration.*;
+import spoon.reflect.code.CtAssignment;
+import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtFieldRead;
+import spoon.reflect.code.CtFieldWrite;
+import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLiteral;
+import spoon.reflect.code.CtLocalVariable;
+import spoon.reflect.code.CtReturn;
+import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtUnaryOperator;
+import spoon.reflect.code.CtVariableRead;
+import spoon.reflect.code.UnaryOperatorKind;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtParameter;
+import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -32,13 +49,12 @@ public class Steps {
     private CtField<String> identifierField;
     private List<CtField<?>> fields;
     private List<CtMethod<?>> methods;
-    private Analyser analyser;
+    private AbstractStrategy strategy;
 
     public Steps(Factory factory, CtClass<?> ctClass) {
         this.factory = factory;
         this.ctHelper = new CtHelper(factory);
         this.ctClass = ctClass;
-        this.analyser = new Analyser(this.getFields(), Collections.singleton(trackField));
     }
 
     public List<CtField<?>> getFields() {
@@ -67,8 +83,14 @@ public class Steps {
         return methods;
     }
 
-    public Analyser analyser(Strategy strategy) {
-        return analyser.setStrategy(strategy);
+    public AnalysisStrategy analyser() {
+        return this.strategy;
+    }
+
+    public void setUpAnalyser(Strategy rawStrategy) {
+        this.strategy = ((AbstractStrategy) rawStrategy.getStrategy())
+                .setClassFields(this.getFields())
+                .setCtClass(this.ctClass);
     }
 
     public CtField<Boolean> createClassTrackFieldIfNotAssigned(boolean defaultValue) {
@@ -195,7 +217,7 @@ public class Steps {
         thenStatement.addStatement(mapStatement);
 
         CtStatement invocationStatement = ctHelper.createFormatCodeSnippet(
-                "com.lexcorp.joura.runtime.listeners.FieldChangeListener.getInstance().accept(this, \"%s\", map123456678)",
+                "com.lexcorp.joura.runtime.listeners.FieldChangeReceiver.getInstance().accept(this, \"%s\", map123456678)",
                 method.getSignature()
         );
         thenStatement.addStatement(invocationStatement);

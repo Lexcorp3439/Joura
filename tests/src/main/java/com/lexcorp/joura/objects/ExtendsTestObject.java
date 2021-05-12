@@ -1,6 +1,6 @@
 package com.lexcorp.joura.objects;
 
-import com.lexcorp.joura.tests.ExpectedFields;
+import com.lexcorp.joura.runtime.options.test.ExpectedFields;
 
 public class ExtendsTestObject extends SimpleTestObject {
     private int value1 = 0;

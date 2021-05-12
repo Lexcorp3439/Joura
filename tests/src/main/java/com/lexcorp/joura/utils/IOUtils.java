@@ -1,5 +1,6 @@
 package com.lexcorp.joura.utils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +13,11 @@ public class IOUtils {
 	 * The default buffer size to use.
 	 */
 	private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
+
+	public static File getFileByClass(String path, Class<?> objectClass) {
+		String fileName = objectClass.getName().replaceAll("\\.", "/") + ".java";
+		return new File(path + fileName);
+	}
 
 	public static int copy(InputStream input, OutputStream output) throws IOException {
 		long count = copyLarge(input, output);

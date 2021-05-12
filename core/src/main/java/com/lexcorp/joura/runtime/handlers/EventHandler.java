@@ -1,10 +1,10 @@
 package com.lexcorp.joura.runtime.handlers;
 
-import java.util.Map;
 
 import com.lexcorp.joura.runtime.Trackable;
+import com.lexcorp.joura.runtime.listeners.Entity;
 
 @FunctionalInterface
 public interface EventHandler {
-    <T extends Trackable> void accept(Long objId, T trackable, String methodName, Map<String, Object> fields);
+    <T extends Trackable> void accept(Entity entity);
 }
