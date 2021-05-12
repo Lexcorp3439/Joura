@@ -102,10 +102,10 @@ public class Steps {
         return identifierField;
     }
 
-    public CtMethod<Void> createSetIdentifierMethod() {
+    public CtMethod<Void> createsetTagMethod() {
         CtParameter<String> parameter = ctHelper.createCtParameter(factory.Type().STRING, "newIdentifier");
-        CtMethod<Void> setIdentifierMethod = ctHelper.createMethodWithParameters(
-                "setIdentifier", factory.Type().VOID_PRIMITIVE,
+        CtMethod<Void> setTagMethod = ctHelper.createMethodWithParameters(
+                "setTag", factory.Type().VOID_PRIMITIVE,
                 Collections.singleton(ModifierKind.PUBLIC), List.of(parameter));
         CtFieldWrite<String> ctFieldWrite = ctHelper.createCtFieldWrite(
                 factory.createThisAccess(ctClass.getTypeErasure()), this.identifierField.getReference()
@@ -113,17 +113,17 @@ public class Steps {
 
         CtVariableRead<String> ctVariableRead = ctHelper.createCtVariableRead(parameter.getReference(), false);
         CtAssignment<String, String> ctAssignment = ctHelper.createCtAssignment(ctFieldWrite, ctVariableRead, factory.Type().STRING);
-        setIdentifierMethod.getBody().insertBegin(ctAssignment);
-        return setIdentifierMethod;
+        setTagMethod.getBody().insertBegin(ctAssignment);
+        return setTagMethod;
     }
 
-    public CtMethod<String> createGetIdentifierMethod() {
-        CtMethod<String> getIdentifierMethod = ctHelper.createMethod(
-                "getIdentifier", factory.Type().STRING, Collections.singleton(ModifierKind.PUBLIC));
+    public CtMethod<String> creategetTagMethod() {
+        CtMethod<String> getTagMethod = ctHelper.createMethod(
+                "getTag", factory.Type().STRING, Collections.singleton(ModifierKind.PUBLIC));
         CtFieldRead<String> ctFieldRead = ctHelper.createCtFieldRead(ctClass, identifierField);
         CtReturn<String> ctReturn = ctHelper.createCtReturn(ctFieldRead);
-        getIdentifierMethod.getBody().insertEnd(ctReturn);
-        return getIdentifierMethod;
+        getTagMethod.getBody().insertEnd(ctReturn);
+        return getTagMethod;
     }
 
     public CtMethod<?> createTrackMethodIfNotExist(boolean isStart) {

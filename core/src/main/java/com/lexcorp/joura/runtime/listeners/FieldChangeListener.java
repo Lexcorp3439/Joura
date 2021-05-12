@@ -15,7 +15,7 @@ public class FieldChangeListener {
     private static final FieldChangeListener INSTANCE = new FieldChangeListener();
     private final List<EventHandler> eventHandlers = new ArrayList<>();
     private final Map<Trackable, List<EventHandler>> instanceEventHandlers = new HashMap<>();
-    private final Map<Trackable, Long> instancesId = new HashMap<>();
+    private final Map<Trackable, Long> instancesId = new WeakHashMap<>();
     private final Map<Class<? extends Trackable>, List<EventHandler>> classEventHandlers = new HashMap<>();
 
     public static FieldChangeListener getInstance() {

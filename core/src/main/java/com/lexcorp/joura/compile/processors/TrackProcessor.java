@@ -45,11 +45,11 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
         CtField<String> identifierField = steps.createIdentifierField();
         ctClass.addField(1, identifierField);
 
-        CtMethod<Void> setIdentifierMethod = steps.createSetIdentifierMethod();
-        ctClass.addMethod(setIdentifierMethod);
+        CtMethod<Void> setTagMethod = steps.createsetTagMethod();
+        ctClass.addMethod(setTagMethod);
 
-        CtMethod<String> getIdentifierMethod = steps.createGetIdentifierMethod();
-        ctClass.addMethod(getIdentifierMethod);
+        CtMethod<String> getTagMethod = steps.creategetTagMethod();
+        ctClass.addMethod(getTagMethod);
 
         if (!alwaysTrack) {
             CtMethod<?> startTrack = steps.createTrackMethodIfNotExist(true);

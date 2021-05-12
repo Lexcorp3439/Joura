@@ -20,7 +20,7 @@ public class Log4JEventHandler implements EventHandler {
 
     @Override
     public <T extends Trackable> void accept(Long objId, T trackable, String methodName, Map<String, Object> fields) {
-        String identifier = trackable.getIdentifier();
+        String identifier = trackable.getTag();
         logger.debug(OBJECT_MARKER, String.format("[%s:%d] - Trackable object: %s", identifier, objId, trackable));
         logger.debug(METHOD_MARKER, String.format("[%s:%d] - Invoked method: %s", identifier, objId, methodName));
         logger.debug(FIELDS_MARKER, String.format("[%s:%d] - Editable fields: %s", identifier, objId, fields.toString()));

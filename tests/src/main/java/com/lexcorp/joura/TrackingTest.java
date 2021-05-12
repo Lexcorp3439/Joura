@@ -50,7 +50,7 @@ public class TrackingTest {
         listener.addEventHandler(new Log4JEventHandler());
 //
         clz1.getMethod("startTrack").invoke(instance1);
-        clz1.getMethod("setIdentifier", String.class).invoke(instance1, "SimpleTestObject-1");
+        clz1.getMethod("setTag", String.class).invoke(instance1, "SimpleTestObject-1");
         clz1.getMethod("testWriteFieldsWithReference").invoke(instance1);
         clz1.getMethod("stopTrack").invoke(instance1);
 
