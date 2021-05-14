@@ -55,8 +55,11 @@ public class SimpleTestObject implements Trackable {
 
     @ExpectedFields(fields = {})
     public void testWriteFieldsWithReference() {
-        SimpleTestObject ref2 = this;
-        ref2.value1 = 100;
+        SimpleTestObject ref = this;
+        SimpleTestObject newObj = new SimpleTestObject();
+        ref = newObj;
+        ref.value1 = 100;
+        newObj.value2 = 1000;
     }
     
     @ExpectedFields(fields = {})

@@ -93,7 +93,6 @@
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
-                            <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>

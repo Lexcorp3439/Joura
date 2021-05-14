@@ -40,6 +40,13 @@ public class Aliases {
         return aliases.get(aliasName);
     }
 
+    public void add(String aliasName, Collection<Instance> instance) {
+        if (!aliases.containsKey(aliasName)) {
+            aliases.put(aliasName, new Alias(aliasName));
+        }
+        aliases.get(aliasName).add(instance);
+    }
+
     public void add(Alias alias, Collection<Instance> instance) {
         if (!aliases.containsKey(alias.name)) {
             aliases.put(alias.name, alias);

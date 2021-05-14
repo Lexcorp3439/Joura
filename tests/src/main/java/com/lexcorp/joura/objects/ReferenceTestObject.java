@@ -16,7 +16,7 @@ public class ReferenceTestObject implements Trackable {
         this.reference.value1 = 100;
     }
 
-    @ExpectedFields(fields = {"value2"})
+    @ExpectedFields(fields = {"value2", "reference"})
     public void testWriteFieldsWithReferenceSimple() {
         this.reference = new ReferenceTestObject();
         this.reference.reference = this;

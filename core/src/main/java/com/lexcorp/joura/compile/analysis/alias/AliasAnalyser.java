@@ -81,16 +81,16 @@ public class AliasAnalyser {
                 .filter(this::isTrackable)
                 .forEach(p -> aliases.add(p.getSimpleName(), aliases.obj(Type.UNKNOWN)));
 
-        List<CtAssignment<?, ?>> assignVariableStatements = method.getElements(Objects::nonNull);
-        assignVariableStatements.stream()
-                .filter(ctAssignment -> isTrackable(ctAssignment.getType()))
-                .filter(ctAssignment -> ctAssignment.getAssigned() instanceof CtVariableWrite)
-                .forEach( ctAssignment -> checkValidAssignment(aliases, ctAssignment));
-
         List<CtLocalVariable<?>> createLocalVariableStatements = method.getElements(Objects::nonNull);
         createLocalVariableStatements.stream()
                 .filter(ctAssignment -> isTrackable(ctAssignment.getType()))
                 .forEach(ctLocalVariable -> createLocalVariableAnalysis(aliases, ctLocalVariable));
+
+        List<CtAssignment<?, ?>> assignVariableStatements = method.getElements(Objects::nonNull);
+        assignVariableStatements.stream()
+                .filter(ctAssignment -> isTrackable(ctAssignment.getType()))
+                .filter(ctAssignment -> ctAssignment.getAssigned() instanceof CtVariableWrite)
+                .forEach(ctAssignment -> checkValidAssignment(aliases, ctAssignment));
 
         return aliases;
     }
@@ -136,6 +136,17 @@ public class AliasAnalyser {
         }
         if (ctExpression instanceof CtConstructorCall) {
             aliases.addNewObjAlias(aliasName);
+        }
+        if (ctExpression instanceof CtInvocation) {
+            CtInvocation<?> ctInvocation = (CtInvocation<?>) ctExpression;
+            String methodSignature = getMethodSignature(ctInvocation.getExecutable().getDeclaration());
+            if (methodReturns.containsKey(methodSignature)) {
+                if (methodReturns.get(methodSignature).isEmpty()) {
+                    aliases.add(aliasName, aliases.obj(Type.UNKNOWN));
+                } else {
+                    aliases.add(aliasName, methodReturns.get(methodSignature));
+                }
+            }
         }
     }
 
