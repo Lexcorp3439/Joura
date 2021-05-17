@@ -31,9 +31,9 @@ public class FieldChangeReceiver {
     public <T extends Trackable> void accept(T trackable, String methodName, Map<String, Object> fields) {
         Long id = Optional.ofNullable(instancesId.get(trackable)).orElse((long) instancesId.size());
         instancesId.put(trackable, (long) instancesId.size());
-        Entity entity = new Entity(id, trackable.getTag(), trackable, methodName, fields);
+        Event event = new Event(id, trackable.getTag(), trackable, methodName, fields);
 
-        Consumer<EventHandler> consumer = handler -> handler.accept(entity);
+        Consumer<EventHandler> consumer = handler -> handler.accept(event);
 
         eventHandlers.forEach(consumer);
         if (instanceEventHandlers.containsKey(trackable)) {

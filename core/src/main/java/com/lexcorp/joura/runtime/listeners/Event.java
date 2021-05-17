@@ -4,14 +4,14 @@ import java.util.Map;
 
 import com.lexcorp.joura.runtime.Trackable;
 
-public class Entity {
+public class Event {
     private Long id;
     private String tag;
     private Trackable trackable;
     private String methodName;
     private Map<String, Object> fields;
 
-    public Entity(Long id, String tag, Trackable trackable, String methodName, Map<String, Object> fields) {
+    public Event(Long id, String tag, Trackable trackable, String methodName, Map<String, Object> fields) {
         this.id = id;
         this.tag = tag;
         this.trackable = trackable;

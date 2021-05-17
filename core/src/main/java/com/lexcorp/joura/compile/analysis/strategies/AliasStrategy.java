@@ -50,10 +50,6 @@ public class AliasStrategy extends AbstractStrategy {
             return Collections.emptyList();
         }
         Set<CtField<?>> editableFields = new HashSet<>();
-
-        if (method.getSimpleName().equals("referenceMethod")) {
-            System.out.println();
-        }
         method.getElements(e -> e instanceof CtAssignment)
                 .forEach(e -> this.addUpdatedFieldsForCurrentIteration(
                         (CtAssignment<?, ?>) e, editableFields, aliasAnalyser.method(method)

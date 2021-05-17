@@ -2,7 +2,7 @@ package com.lexcorp.joura.runtime.handlers;
 
 import com.lexcorp.joura.logger.JouraLogger;
 import com.lexcorp.joura.runtime.Trackable;
-import com.lexcorp.joura.runtime.listeners.Entity;
+import com.lexcorp.joura.runtime.listeners.Event;
 
 import static com.lexcorp.joura.logger.Markers.Runtime.FIELDS_MARKER;
 import static com.lexcorp.joura.logger.Markers.Runtime.METHOD_MARKER;
@@ -15,18 +15,18 @@ public class LogEventHandler implements EventHandler {
     }
 
     @Override
-    public <T extends Trackable> void accept(Entity entity) {
+    public <T extends Trackable> void accept(Event event) {
         logger.info(OBJECT_MARKER, String.format(
                 "[%s:%d] - Trackable object: %s",
-                entity.getTag(), entity.getId(), entity.getTrackable()
+                event.getTag(), event.getId(), event.getTrackable()
         ));
         logger.info(METHOD_MARKER, String.format(
                 "[%s:%d] - Invoked method: %s",
-                entity.getTag(), entity.getId(), entity.getMethodName()
+                event.getTag(), event.getId(), event.getMethodName()
         ));
         logger.info(FIELDS_MARKER, String.format(
                 "[%s:%d] - Editable fields: %s",
-                entity.getTag(), entity.getId(), entity.getFields().toString()
+                event.getTag(), event.getId(), event.getFields().toString()
         ));
     }
 }

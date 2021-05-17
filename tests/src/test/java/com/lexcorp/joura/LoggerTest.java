@@ -9,8 +9,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.lexcorp.joura.compile.processors.TrackProcessor;
-import com.lexcorp.joura.handlers.EntitiesTestHandler;
+import com.lexcorp.joura.handlers.EventsTestHandler;
 import com.lexcorp.joura.objects.SimpleTestObject;
+import com.lexcorp.joura.runtime.handlers.LogEventHandler;
 import com.lexcorp.joura.runtime.listeners.FieldChangeReceiver;
 import com.lexcorp.joura.utils.IOUtils;
 import com.lexcorp.joura.utils.TestSpooner;
@@ -27,7 +28,7 @@ public class LoggerTest {
     static Class<?> testClass;
     static Object instance;
     static FieldChangeReceiver listener;
-    static EntitiesTestHandler entitiesTestHandler;
+    static EventsTestHandler eventsTestHandler;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -41,30 +42,31 @@ public class LoggerTest {
         testClass = spooner.getSpoonedClass(beforeTransformClass.getName());
         instance = testClass.getDeclaredConstructors()[0].newInstance();
         listener = FieldChangeReceiver.getInstance();
-        entitiesTestHandler = new EntitiesTestHandler();
-        listener.addEventHandler(entitiesTestHandler);
+        eventsTestHandler = new EventsTestHandler();
+        listener.addEventHandler(eventsTestHandler);
+        listener.addEventHandler(new LogEventHandler());
     }
 
     @Test
     public void testStartStopTrackWorkCorrect() throws Exception {
         invoke("setTag", "SimpleTestObject-1");
-        entitiesTestHandler.checkEntityReceivedCount(0);
+        eventsTestHandler.checkEntityReceivedCount(0);
 
         invoke("testAssignWithThis", 2);
-        entitiesTestHandler.checkEntityReceivedCount(0);
+        eventsTestHandler.checkEntityReceivedCount(0);
 
         invoke("startTrack");
-        entitiesTestHandler.checkEntityReceivedCount(0);
+        eventsTestHandler.checkEntityReceivedCount(0);
 
         invoke("testAssignWithThis", 2);
-        entitiesTestHandler.checkEntityReceivedCount(1);
-        entitiesTestHandler.checkLastEntityMethodName("testAssignWithThis(java.lang.Integer)");
+        eventsTestHandler.checkEntityReceivedCount(1);
+        eventsTestHandler.checkLastEntityMethodName("testAssignWithThis(java.lang.Integer)");
 
         invoke("stopTrack");
-        entitiesTestHandler.checkEntityReceivedCount(0);
+        eventsTestHandler.checkEntityReceivedCount(0);
 
         invoke("testAssignWithThis", 2);
-        entitiesTestHandler.checkEntityReceivedCount(0);
+        eventsTestHandler.checkEntityReceivedCount(0);
     }
 
     @Test

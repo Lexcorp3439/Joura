@@ -3,6 +3,8 @@
 JourA - (**J**ournaling **A**dvanced) is a library for tracking and journaling objects runtime changes using static
 analysis.
 
+## [CircleCI](https://app.circleci.com/pipelines/github/Lexcorp3439/Joura)
+
 ## How to use
 
 no way :)
@@ -25,3 +27,4 @@ changed inside the method.
 
 ### 3. DEEP _(not completed)_
 Not implemented yet
+
