@@ -7,6 +7,8 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 
 public interface AnalysisStrategy {
+    void run();
+
     List<CtField<?>> runForMethod(CtMethod<?> method);
 
     Map<CtMethod<?>, List<CtField<?>>> runForClass(boolean allMethods);

@@ -6,11 +6,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import com.lexcorp.joura.logger.JouraLogger;
 import com.lexcorp.joura.runtime.Trackable;
-import com.lexcorp.joura.runtime.handlers.Log4JEventHandler;
 
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtConstructorCall;
@@ -28,9 +25,12 @@ import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
 import static com.lexcorp.joura.compile.analysis.alias.Instance.Type;
+import static com.lexcorp.joura.logger.Markers.Compile.CREATE_LOCAL_VAR_ANALYSIS;
+import static com.lexcorp.joura.logger.Markers.Compile.END_ALIAS_METHOD_MARKER;
+import static com.lexcorp.joura.logger.Markers.Compile.START_ALIAS_METHOD_MARKER;
 
 public class AliasAnalyser {
-    private static final Logger logger = LogManager.getLogger(Log4JEventHandler.class);
+    private static final JouraLogger logger = JouraLogger.get(AliasAnalyser.class);
 
     private final CtClass<?> ctClass;
     public final Aliases fieldAliases = new Aliases();
@@ -76,6 +76,7 @@ public class AliasAnalyser {
 
     public Aliases runForMethod(CtMethod<?> method) {
         Aliases aliases = new Aliases();
+        logger.info(START_ALIAS_METHOD_MARKER, method.getSignature());
 
         method.getParameters().stream()
                 .filter(this::isTrackable)
@@ -92,15 +93,16 @@ public class AliasAnalyser {
                 .filter(ctAssignment -> ctAssignment.getAssigned() instanceof CtVariableWrite)
                 .forEach(ctAssignment -> checkValidAssignment(aliases, ctAssignment));
 
+        logger.info(END_ALIAS_METHOD_MARKER, aliases.toString() + "\n" + "===============================");
         return aliases;
     }
 
     public Aliases method(CtMethod<?> method) {
-        logger.debug("Aliases for method " + method.getSignature());
         return methodAliases.get(method);
     }
 
     private void checkValidAssignment(Aliases aliases, CtAssignment<?, ?> ctAssignment) {
+        logger.info(CREATE_LOCAL_VAR_ANALYSIS, ctAssignment.toString());
         CtExpression<?> assignment = ctAssignment.getAssignment();
         Alias assignedAlias = aliases.get(ctAssignment.getAssigned().toString());
         if (assignment instanceof CtVariableRead) {
@@ -124,6 +126,7 @@ public class AliasAnalyser {
     }
 
     private void createLocalVariableAnalysis(Aliases aliases, CtLocalVariable<?> ctLocalVariable) {
+        logger.info(CREATE_LOCAL_VAR_ANALYSIS, ctLocalVariable.toString());
         String aliasName = ctLocalVariable.getSimpleName();
         CtExpression<?> ctExpression = ctLocalVariable.getDefaultExpression();
         if (ctExpression instanceof CtThisAccess) {

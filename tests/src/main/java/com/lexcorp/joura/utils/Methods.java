@@ -2,8 +2,22 @@ package com.lexcorp.joura.utils;
 
 import java.util.List;
 
-public class StaticMethods {
+import com.lexcorp.joura.objects.MethodInvocationTestObject;
+
+public class Methods {
     public int value1213 = 123;
+
+    public void method(Integer id) {
+        id += 100;
+    }
+
+    public MethodInvocationTestObject create() {
+        return new MethodInvocationTestObject();
+    }
+
+    public static MethodInvocationTestObject createStatic() {
+        return new MethodInvocationTestObject();
+    }
 
     public static void method(Integer i1, int i2, List<Integer> list) {
         list.add(1);

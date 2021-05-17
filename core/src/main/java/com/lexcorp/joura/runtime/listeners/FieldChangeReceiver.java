@@ -8,16 +8,12 @@ import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.function.Consumer;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import com.lexcorp.joura.logger.JouraLogger;
 import com.lexcorp.joura.runtime.Trackable;
 import com.lexcorp.joura.runtime.handlers.EventHandler;
-import com.lexcorp.joura.runtime.handlers.Log4JEventHandler;
 
 public class FieldChangeReceiver {
-    //    private final Logger log = Logger.getLogger(FieldChangeListener.class.getName());
-    private static final Logger log = LogManager.getLogger(Log4JEventHandler.class);
+    private static final JouraLogger log = JouraLogger.get(FieldChangeReceiver.class);
     private static final FieldChangeReceiver INSTANCE = new FieldChangeReceiver();
     private final List<EventHandler> eventHandlers = new ArrayList<>();
     private final Map<Trackable, List<EventHandler>> instanceEventHandlers = new HashMap<>();

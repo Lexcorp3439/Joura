@@ -10,7 +10,9 @@ import com.lexcorp.joura.compile.processors.TrackProcessor;
 import com.lexcorp.joura.objects.AlwaysTrackOptionTestObject;
 import com.lexcorp.joura.objects.ExtendsTestObject;
 import com.lexcorp.joura.objects.IfWhileTestObject;
+import com.lexcorp.joura.objects.MethodInvocationTestObject;
 import com.lexcorp.joura.objects.ReferenceTestObject;
+import com.lexcorp.joura.objects.ReturnStatementsTestObject;
 import com.lexcorp.joura.objects.SimpleTestObject;
 import com.lexcorp.joura.objects.UntrackedOptionTestObject;
 import com.lexcorp.joura.utils.IOUtils;
@@ -60,6 +62,16 @@ public class AnalysisTest {
     @Test
     public void testOperationsWithExtendsClass() throws Exception {
         this.compileAndCheckResult(ExtendsTestObject.class);
+    }
+
+    @Test
+    public void testMethodsInvocationsHandlingTestClass() throws Exception {
+        this.compileAndCheckResult(MethodInvocationTestObject.class);
+    }
+
+    @Test
+    public void testReturnStatementsTestClass() throws Exception {
+        this.compileAndCheckResult(ReturnStatementsTestObject.class);
     }
 
     private void compileAndCheckResult(Class<?> objectClass) throws Exception {

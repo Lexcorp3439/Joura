@@ -8,6 +8,11 @@ import spoon.reflect.declaration.CtMethod;
 public class SimpleStrategy extends AbstractStrategy {
 
     @Override
+    public void run() {
+
+    }
+
+    @Override
     public List<CtField<?>> runForMethod(CtMethod<?> method) {
         return this.classFields;
     }

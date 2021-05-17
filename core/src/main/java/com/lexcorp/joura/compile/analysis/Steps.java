@@ -116,15 +116,16 @@ public class Steps {
         return trackField;
     }
 
-    public CtField<String> createIdentifierField() {
+    public CtField<String> createTagField() {
         CtTypeReference<String> typeReference = factory.Type().STRING;
         CtLiteral<String> ctLiteral = ctHelper.createCtLiteral("UNKNOWN", typeReference);
+        CtField<?> field = ctHelper.createCtField(createFieldName(), factory.Type().STRING, ctLiteral);
         identifierField = ctHelper.createCtField(createFieldName(), factory.Type().STRING, ctLiteral);
-        identifierField.setDocComment("Identifier");
+        identifierField.setDocComment("Tag");
         return identifierField;
     }
 
-    public CtMethod<Void> createsetTagMethod() {
+    public CtMethod<Void> createSetTagMethod() {
         CtParameter<String> parameter = ctHelper.createCtParameter(factory.Type().STRING, "newIdentifier");
         CtMethod<Void> setTagMethod = ctHelper.createMethodWithParameters(
                 "setTag", factory.Type().VOID_PRIMITIVE,
@@ -139,7 +140,7 @@ public class Steps {
         return setTagMethod;
     }
 
-    public CtMethod<String> creategetTagMethod() {
+    public CtMethod<String> createGetTagMethod() {
         CtMethod<String> getTagMethod = ctHelper.createMethod(
                 "getTag", factory.Type().STRING, Collections.singleton(ModifierKind.PUBLIC));
         CtFieldRead<String> ctFieldRead = ctHelper.createCtFieldRead(ctClass, identifierField);
@@ -237,21 +238,22 @@ public class Steps {
     public void updateReturnStatements(CtMethod<?> method, CtStatement ctStatement) {
         List<CtReturn<?>> ctReturns = method.getElements(Objects::nonNull);
         ctReturns.forEach(ctReturn -> {
-            method.getBody().removeStatement(ctReturn);
+            ctStatement.setParent(ctReturn.getParent());
+            CtBlock<?> ctBlock = ctReturn.getParent(CtBlock.class);
+            ctBlock.removeStatement(ctReturn);
             if (ctReturn.getElements(e -> e instanceof CtInvocation).size() > 0) {
-
                 CtLocalVariable<?> localVariable = ctHelper.createLocalVar(
                         (CtTypeReference) method.getType(), ctReturn.getReturnedExpression()
                 );
                 CtVariableRead variableRead = ctHelper.createCtVariableRead(localVariable.getReference(), false);
                 CtReturn<?> ctReturnStatement = factory.createReturn().setReturnedExpression(variableRead);
 
-                method.getBody().insertEnd(localVariable);
-                method.getBody().insertEnd(ctStatement);
-                method.getBody().insertEnd(ctReturnStatement);
+                ctBlock.insertEnd(localVariable);
+                ctBlock.insertEnd(ctStatement);
+                ctBlock.insertEnd(ctReturnStatement);
             } else {
-                method.getBody().insertEnd(ctStatement);
-                method.getBody().insertEnd(ctReturn);
+                ctBlock.insertEnd(ctStatement);
+                ctBlock.insertEnd(ctReturn);
             }
         });
     }

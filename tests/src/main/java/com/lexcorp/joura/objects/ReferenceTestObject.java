@@ -9,7 +9,6 @@ public class ReferenceTestObject implements Trackable {
     private int value2 = 0;
     private int value3 = 0;
 
-
     @ExpectedFields(fields = {"value1"})
     public void testWriteFieldsWithField() {
         this.reference = this;

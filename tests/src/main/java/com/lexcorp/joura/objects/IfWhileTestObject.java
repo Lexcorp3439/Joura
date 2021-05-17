@@ -5,7 +5,7 @@ import java.util.Random;
 import com.lexcorp.joura.runtime.Trackable;
 import com.lexcorp.joura.runtime.options.test.ExpectedFields;
 
-import static com.lexcorp.joura.utils.StaticMethods.method;
+import static com.lexcorp.joura.utils.Methods.method;
 
 public class IfWhileTestObject implements Trackable {
     public int value1;

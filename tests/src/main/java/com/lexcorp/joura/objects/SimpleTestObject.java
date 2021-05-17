@@ -44,8 +44,8 @@ public class SimpleTestObject implements Trackable {
     }
 
     @ExpectedFields(fields = {"value2"})
-    public void testSendFieldToArgs() {
-        change(this.value2);
+    public List<Integer> testSendFieldToArgs() {
+        return change(this.value2);
     }
 
     @ExpectedFields(fields = {"integers"})

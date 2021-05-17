@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.lexcorp.joura.compile.analysis.alias.AliasAnalyser;
 import com.lexcorp.joura.compile.analysis.alias.Aliases;
+import com.lexcorp.joura.logger.JouraLogger;
 
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExpression;
@@ -22,14 +23,24 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtFieldReference;
 
+import static com.lexcorp.joura.logger.Markers.Compile.END_ALIAS_ANALYSIS_MARKER;
+import static com.lexcorp.joura.logger.Markers.Compile.START_ALIAS_ANALYSIS_MARKER;
+
 public class AliasStrategy extends AbstractStrategy {
     private AliasAnalyser aliasAnalyser;
+    private static final JouraLogger logger = JouraLogger.get(AliasStrategy.class);
+
+    @Override
+    public void run() {
+        logger.info(START_ALIAS_ANALYSIS_MARKER, this.ctClass.getSimpleName() + " " + this.classFields.toString());
+        this.aliasAnalyser.run();
+        logger.info(END_ALIAS_ANALYSIS_MARKER, this.ctClass.getSimpleName() + "\n");
+    }
 
     @Override
     public AbstractStrategy setCtClass(CtClass<?> ctClass) {
         super.setCtClass(ctClass);
         this.aliasAnalyser = new AliasAnalyser(this.ctClass);
-        aliasAnalyser.run();
         return this;
     }
 

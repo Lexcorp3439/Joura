@@ -8,7 +8,8 @@ import java.util.stream.Collectors;
 import com.lexcorp.joura.compile.analysis.Steps;
 import com.lexcorp.joura.logger.JouraLogger;
 import com.lexcorp.joura.runtime.Trackable;
-import com.lexcorp.joura.runtime.handlers.Log4JEventHandler;
+import com.lexcorp.joura.runtime.handlers.LogEventHandler;
+import com.lexcorp.joura.runtime.options.All;
 import com.lexcorp.joura.runtime.options.Assign;
 import com.lexcorp.joura.runtime.options.Strategy;
 import com.lexcorp.joura.runtime.options.TrackOptions;
@@ -20,11 +21,15 @@ import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 
+import static com.lexcorp.joura.logger.Markers.Compile.END_METHOD_PROCESSING_MARKER;
+import static com.lexcorp.joura.logger.Markers.Compile.END_PROCESS_MARKER;
 import static com.lexcorp.joura.logger.Markers.Compile.EXPECTED_FIELDS_MARKER;
 import static com.lexcorp.joura.logger.Markers.Compile.RECEIVED_FIELDS_MARKER;
+import static com.lexcorp.joura.logger.Markers.Compile.START_METHOD_PROCESSING_MARKER;
+import static com.lexcorp.joura.logger.Markers.Compile.START_PROCESS_MARKER;
 
 public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackable>> {
-    private static final JouraLogger logger = JouraLogger.get(Log4JEventHandler.class);
+    private static final JouraLogger logger = JouraLogger.get(LogEventHandler.class);
     private Steps steps;
 
     @Override
@@ -34,7 +39,7 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
 
     @Override
     public void process(CtClass<? extends Trackable> ctClass) {
-        System.out.println("RUN FOR CLASS " + ctClass.getSimpleName());
+        logger.info(START_PROCESS_MARKER, ctClass.getSimpleName());
         steps = new Steps(getFactory(), ctClass);
 
         TrackOptions trackOptions = ctClass.getAnnotation(TrackOptions.class);
@@ -42,6 +47,7 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
                 ? Strategy.ALIAS_ANALYSIS
                 : trackOptions.strategy();
         steps.setUpAnalyser(analysingStrategy);
+        steps.analyser().run();
 
         boolean alwaysTrack = analysingStrategy == Strategy.ALWAYS_TRACK;
 
@@ -50,13 +56,13 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
         CtField<Boolean> trackField = steps.createClassTrackFieldIfNotAssigned(alwaysTrack);
         ctClass.addField(0, trackField);
 
-        CtField<String> identifierField = steps.createIdentifierField();
+        CtField<String> identifierField = steps.createTagField();
         ctClass.addField(1, identifierField);
 
-        CtMethod<Void> setTagMethod = steps.createsetTagMethod();
+        CtMethod<Void> setTagMethod = steps.createSetTagMethod();
         ctClass.addMethod(setTagMethod);
 
-        CtMethod<String> getTagMethod = steps.creategetTagMethod();
+        CtMethod<String> getTagMethod = steps.createGetTagMethod();
         ctClass.addMethod(getTagMethod);
 
         if (!alwaysTrack) {
@@ -74,11 +80,17 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
             if (method.getSimpleName().equals("testAssignWithThis")) {
                 System.out.println();
             }
+            logger.info(START_METHOD_PROCESSING_MARKER, method.getSignature());
 
-            Collection<CtField<?>> editableFields = method.hasAnnotation(Assign.class)
+            Collection<CtField<?>> editableFields = method.hasAnnotation(All.class)
+                    ? ctClass.getFields()
+                    : method.hasAnnotation(Assign.class)
                     ? steps.getAssignedFields(method)
                     : steps.analyser().runForMethod(method);
 
+            logger.info(RECEIVED_FIELDS_MARKER, editableFields.stream()
+                    .map(CtField::getSimpleName)
+                    .collect(Collectors.toSet()).toString());
             if (method.hasAnnotation(ExpectedFields.class)) {
                 Set<String> actualFields = editableFields.stream()
                         .map(CtField::getSimpleName)
@@ -86,8 +98,7 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
                 Set<String> expectedFields = new java.util.HashSet<>(
                         Set.of(method.getAnnotation(ExpectedFields.class).fields())
                 );
-                logger.debug(RECEIVED_FIELDS_MARKER, "actual fields " + actualFields);
-                logger.debug(EXPECTED_FIELDS_MARKER, "expected fields " + expectedFields);
+                logger.info(EXPECTED_FIELDS_MARKER, expectedFields.toString());
                 expectedFields.removeAll(actualFields);
                 assert expectedFields.size() == 0 : "In method " + method.getSignature() +
                         " lost expected fields " + expectedFields +
@@ -101,7 +112,9 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
 
                 steps.updateMethodWithStatement(method, fieldChangeNotifierStatement);
             }
+            logger.info(END_METHOD_PROCESSING_MARKER, method.getSignature() + "\n");
         }
+        logger.info(END_PROCESS_MARKER, ctClass.getSimpleName() + "\n");
     }
 
 
