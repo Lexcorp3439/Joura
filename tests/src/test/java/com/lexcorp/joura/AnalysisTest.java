@@ -1,8 +1,8 @@
 package com.lexcorp.joura;
 
 import java.io.File;
+import java.util.logging.Level;
 
-import org.apache.log4j.Level;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

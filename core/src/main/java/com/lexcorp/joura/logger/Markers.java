@@ -20,6 +20,10 @@ public class Markers {
                 .setParents(PROCESSOR_MARKER);
         public static final Marker START_ALIAS_METHOD_MARKER = Marker.getMarker("START_ALIAS_METHOD")
                 .setParents(ALIAS_MARKER);
+        public static final Marker ITER_ALIAS_METHOD_MARKER_START = Marker.getMarker("ITER_ALIAS_METHOD_START")
+                .setParents(ALIAS_MARKER);
+        public static final Marker ITER_ALIAS_METHOD_MARKER_END = Marker.getMarker("ITER_ALIAS_METHOD_END")
+                .setParents(ALIAS_MARKER);
         public static final Marker END_ALIAS_METHOD_MARKER = Marker.getMarker("END_ALIAS_METHOD")
                 .setParents(ALIAS_MARKER);
         public static final Marker CREATE_LOCAL_VAR_ANALYSIS = Marker.getMarker("CREATE_LOCAL_VAR_ANALYSIS")

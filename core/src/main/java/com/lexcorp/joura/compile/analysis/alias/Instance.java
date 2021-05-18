@@ -1,5 +1,7 @@
 package com.lexcorp.joura.compile.analysis.alias;
 
+import java.util.Objects;
+
 public class Instance {
     Type type;
 
@@ -15,9 +17,25 @@ public class Instance {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Instance instance = (Instance) o;
+        return type == instance.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type);
+    }
+
+    @Override
     public String toString() {
         return "Instance{" +
-                " hash=" + hashCode() +
                 " type=" + type +
                 " }";
     }

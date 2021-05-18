@@ -45,7 +45,6 @@ public class TestSpoonCompiler extends JDTBasedSpoonCompiler {
 					"Generating source files to: " + getSourceOutputDirectory());
 
 			List<File> printedFiles = new ArrayList<>();
-			printing:
 			for (spoon.reflect.cu.CompilationUnit cu : getFactory().CompilationUnit()
 					.getMap().values()) {
 
@@ -81,8 +80,7 @@ public class TestSpoonCompiler extends JDTBasedSpoonCompiler {
 				file.createNewFile();
 
 				// the path must be given relatively to to the working directory
-				InputStream is = getCompilationUnitInputStream(cu.getFile()
-						.getPath());
+				InputStream is = getCompilationUnitInputStream(cu.getFile().getPath());
 
 				IOUtils.copy(is, new FileOutputStream(file));
 
