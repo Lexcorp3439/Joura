@@ -48,12 +48,12 @@ public class Alias {
             return false;
         }
         Alias alias = (Alias) o;
-        return name.equals(alias.name);
+        return Objects.equals(name, alias.name) && Objects.equals(instances, alias.instances);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(name, instances);
     }
 
     @Override

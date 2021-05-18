@@ -1,6 +1,7 @@
 package com.lexcorp.joura.compile.analysis.alias;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
 import static com.lexcorp.joura.compile.analysis.alias.Instance.THIS;
@@ -40,59 +41,75 @@ public class Aliases {
         return aliases.get(aliasName);
     }
 
-    public void add(String aliasName, Collection<Instance> instance) {
-        if (!aliases.containsKey(aliasName)) {
-            aliases.put(aliasName, new Alias(aliasName));
-        }
-        aliases.get(aliasName).add(instance);
-    }
-
-    public void add(Alias alias, Collection<Instance> instance) {
+    public boolean add(Alias alias, Collection<Instance> instance) {
         if (!aliases.containsKey(alias.name)) {
             aliases.put(alias.name, alias);
+        } else {
+            assert alias.equals(aliases.get(alias.name)) : "Aliases has the same names but not equals";
         }
-        aliases.get(alias.name).add(instance);
+        return this.checkAliasChangeAfterProcedure(alias, () -> alias.add(instance));
     }
 
-    public void add(Alias alias, Instance instance) {
-        if (!aliases.containsKey(alias.name)) {
-            aliases.put(alias.name, alias);
-        }
-        aliases.get(alias.name).add(instance);
+    public boolean add(String aliasName, Collection<Instance> instance) {
+        Alias alias = aliases.containsKey(aliasName)
+                ? aliases.get(aliasName)
+                : new Alias(aliasName);
+        aliases.put(aliasName, alias);
+        return this.add(alias, instance);
     }
 
-    public void add(String aliasName, Instance instance) {
-        Alias alias = new Alias(aliasName);
-        this.add(alias, instance);
+
+    public boolean add(Alias alias, Instance instance) {
+        return this.add(alias, Collections.singletonList(instance));
     }
 
-    public void addThisAlias(Alias alias) {
-        this.add(alias.name, THIS);
+    public boolean add(String aliasName, Instance instance) {
+        return this.add(aliasName, Collections.singletonList(instance));
     }
 
-    public void addThisAlias(String aliasName) {
-        this.add(aliasName, THIS);
+    public boolean merge(Alias alias, Alias otherAlias) {
+        return this.checkAliasChangeAfterProcedure(alias, () -> alias.merge(otherAlias));
     }
 
-    public void addNewObjAlias(Alias alias) {
-        Instance instance = this.obj(Type.NEW);
-        this.add(alias, instance);
-    }
-
-    public void addNewObjAlias(String aliasName) {
-        Instance instance = this.obj(Type.NEW);
-        this.add(aliasName, instance);
-    }
-
-    public void addWithMerge(String aliasName, String otherAliasName) {
+    public boolean merge(String aliasName, String otherAliasName) {
         Alias alias = get(aliasName);
         Alias otherAlias = get(otherAliasName);
-        alias.merge(otherAlias);
+        return this.merge(alias, otherAlias);
     }
 
-    public void addWithMerge(String aliasName, Alias otherAlias) {
+    public boolean merge(Alias alias, String otherAliasName) {
+        Alias otherAlias = get(otherAliasName);
+        return this.merge(alias, otherAlias);
+    }
+
+    public boolean merge(String aliasName, Alias otherAlias) {
         Alias alias = get(aliasName);
-        alias.merge(otherAlias);
+        return this.merge(alias, otherAlias);
+    }
+
+    public boolean addThisAlias(Alias alias) {
+        return this.add(alias.name, THIS);
+    }
+
+    public boolean addThisAlias(String aliasName) {
+        return this.add(aliasName, THIS);
+    }
+
+    public boolean addNewObjAlias(Alias alias) {
+        Instance instance = this.obj(Type.NEW);
+        return this.add(alias, instance);
+    }
+
+    public boolean addNewObjAlias(String aliasName) {
+        Instance instance = this.obj(Type.NEW);
+        return this.add(aliasName, instance);
+    }
+
+    private boolean checkAliasChangeAfterProcedure(Alias alias, Procedure procedure) {
+        int beforeCount = alias.instances.size();
+        procedure.run();
+        int afterCount = alias.instances.size();
+        return beforeCount != afterCount;
     }
 
     public HashMap<String, Alias> getMap() {
@@ -102,5 +119,10 @@ public class Aliases {
     @Override
     public String toString() {
         return "aliases=" + aliases;
+    }
+
+    @FunctionalInterface
+    public interface Procedure {
+        void run();
     }
 }
