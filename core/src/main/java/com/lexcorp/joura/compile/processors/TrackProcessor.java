@@ -14,6 +14,7 @@ import com.lexcorp.joura.runtime.options.Assign;
 import com.lexcorp.joura.runtime.options.Strategy;
 import com.lexcorp.joura.runtime.options.TrackOptions;
 import com.lexcorp.joura.runtime.options.test.ExpectedFields;
+import com.lexcorp.joura.utils.CtHelper;
 
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtStatement;
@@ -32,9 +33,10 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
     private static final JouraLogger logger = JouraLogger.get(LogEventHandler.class);
     private Steps steps;
 
+
     @Override
     public boolean isToBeProcessed(CtClass<? extends Trackable> candidate) {
-        return candidate.getSuperInterfaces().contains(getFactory().createCtTypeReference(Trackable.class));
+        return CtHelper.isTrackable(candidate);
     }
 
     @Override

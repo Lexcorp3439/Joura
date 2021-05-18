@@ -1,6 +1,7 @@
 package com.lexcorp.joura;
 
 import java.io.File;
+import java.util.List;
 import java.util.logging.Level;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +62,10 @@ public class AnalysisTest {
 
     @Test
     public void testOperationsWithExtendsClass() throws Exception {
-        this.compileAndCheckResult(ExtendsTestObject.class);
+        this.compileAndCheckResult(List.of(
+                ExtendsTestObject.class,
+                SimpleTestObject.class
+        ));
     }
 
     @Test
@@ -77,6 +81,17 @@ public class AnalysisTest {
     private void compileAndCheckResult(Class<?> objectClass) throws Exception {
         File testClass = IOUtils.getFileByClass(FILES_PATH_PREFIX, objectClass);
         spooner.addSource(testClass);
+        //noinspection unchecked
+        spooner.process(TrackProcessor.class);
+        spooner.print(new File("target/spooned/track"));
+        assertTrue(spooner.compile());
+    }
+
+    private void compileAndCheckResult(List<Class<?>> objectsClasses) throws Exception {
+        for (Class<?> testClass : objectsClasses) {
+            File testClassFile = IOUtils.getFileByClass(FILES_PATH_PREFIX, testClass);
+            spooner.addSource(testClassFile);
+        }
         //noinspection unchecked
         spooner.process(TrackProcessor.class);
         spooner.print(new File("target/spooned/track"));
