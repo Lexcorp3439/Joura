@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.lexcorp.joura.logger.JouraLogger;
-import com.lexcorp.joura.runtime.Trackable;
+import com.lexcorp.joura.utils.CtHelper;
 
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtConstructorCall;
@@ -38,6 +38,7 @@ public class AliasAnalyser {
     public final Aliases fieldAliases = new Aliases();
     private final HashMap<String, Set<Instance>> methodReturns;
     private final HashMap<CtMethod<?>, Aliases> methodAliases;
+    private Set<CtTypeReference<?>> extendsTypes;
 
 
     public AliasAnalyser(CtClass<?> ctClass) {
@@ -46,18 +47,26 @@ public class AliasAnalyser {
         this.methodAliases = new HashMap<>();
     }
 
+    private Set<CtTypeReference<?>> getExtendsTypesSet() {
+        if (extendsTypes == null) {
+            extendsTypes = CtHelper.getExtendsTypesSet(this.ctClass);
+        }
+        return this.extendsTypes;
+    }
+
     public boolean isTrackable(CtParameter<?> ctParameter) {
         return this.isTrackable(ctParameter.getType());
     }
 
     public boolean isTrackable(CtTypeReference<?> typeReference) {
         Factory factory = this.ctClass.getFactory();
-        CtClass<?> ctClass = factory.Class()
-                .get(typeReference.getQualifiedName());
+        CtClass<?> ctClass = factory.Class().get(typeReference.getQualifiedName());
         if (ctClass == null) {
             return false;
         }
-        return ctClass.getSuperInterfaces().contains(factory.createCtTypeReference(Trackable.class));
+        boolean isTrackable = CtHelper.isTrackable(typeReference);
+        boolean isExtends = getExtendsTypesSet().contains(typeReference);
+        return isExtends && isTrackable;
     }
 
     public void run() {

@@ -1,11 +1,32 @@
 package com.lexcorp.joura.utils;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import spoon.reflect.code.*;
-import spoon.reflect.declaration.*;
+import com.lexcorp.joura.logger.JouraLogger;
+import com.lexcorp.joura.logger.Marker;
+import com.lexcorp.joura.runtime.Trackable;
+import com.lexcorp.joura.runtime.handlers.LogEventHandler;
+
+import spoon.reflect.code.CtAssignment;
+import spoon.reflect.code.CtCodeSnippetStatement;
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtFieldRead;
+import spoon.reflect.code.CtFieldWrite;
+import spoon.reflect.code.CtIf;
+import spoon.reflect.code.CtLiteral;
+import spoon.reflect.code.CtLocalVariable;
+import spoon.reflect.code.CtReturn;
+import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtThisAccess;
+import spoon.reflect.code.CtVariableRead;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtParameter;
+import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
@@ -13,11 +34,54 @@ import spoon.reflect.reference.CtVariableReference;
 import static com.lexcorp.joura.utils.StringHelper.createFieldName;
 
 public class CtHelper {
+    private static final JouraLogger logger = JouraLogger.get(LogEventHandler.class);
 
     Factory factory;
 
     public CtHelper(Factory factory) {
         this.factory = factory;
+    }
+
+    public static boolean isTrackable(CtTypeReference<?> typeReference) {
+        Factory factory = typeReference.getFactory();
+        CtClass<?> ctClass = factory.Class().get(typeReference.getQualifiedName());
+        return isTrackable(ctClass);
+    }
+
+    public static boolean isTrackable(CtClass<?> ctClass) {
+        Factory factory = ctClass.getFactory();
+        CtTypeReference<?> trackableType = factory.createCtTypeReference(Trackable.class);
+        CtClass<?> parentClass;
+        CtTypeReference<?> parentType = ctClass.getTypeErasure();
+        System.out.println("=================================");
+        while (parentType != null) {
+            parentClass = factory.Class().get(parentType.getQualifiedName());
+            if (parentClass == null) {
+                logger.warn(
+                        Marker.getMarker("CT_HELPER"),
+                        "Could not find CtClass for type: " + parentType.getQualifiedName()
+                );
+                return false;
+            }
+            if (parentClass.getSuperInterfaces().contains(trackableType)) {
+                return true;
+            }
+            parentType = parentClass.getSuperclass();
+        }
+        return false;
+    }
+
+    public static Set<CtTypeReference<?>> getExtendsTypesSet(CtClass<?> ctClass) {
+        Set<CtTypeReference<?>> extendsTypes = new HashSet<>();
+        Factory factory = ctClass.getFactory();
+        extendsTypes.add(ctClass.getTypeErasure());
+        CtTypeReference<?> parentType = ctClass.getSuperclass();
+        while (parentType != null) {
+            extendsTypes.add(parentType);
+            CtClass<?> parentClass = factory.Class().get(parentType.getQualifiedName());
+            parentType = parentClass.getSuperclass();
+        }
+        return extendsTypes;
     }
 
     public <T> CtField<T> createCtField(String filedName, CtTypeReference<T> typeReference, CtExpression<T> expression) {
