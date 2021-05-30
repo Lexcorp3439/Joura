@@ -5,9 +5,10 @@ import java.util.List;
 
 import com.lexcorp.joura.runtime.Trackable;
 import com.lexcorp.joura.runtime.options.Assign;
+import com.lexcorp.joura.runtime.options.TrackOptions;
 import com.lexcorp.joura.runtime.options.test.ExpectedFields;
 
-
+@TrackOptions(always = false)
 public class SimpleTestObject implements Trackable {
     private int value1 = 0;
     private Integer value2 = 2;

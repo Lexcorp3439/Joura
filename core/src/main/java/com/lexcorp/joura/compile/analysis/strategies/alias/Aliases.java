@@ -1,11 +1,11 @@
-package com.lexcorp.joura.compile.analysis.alias;
+package com.lexcorp.joura.compile.analysis.strategies.alias;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 
-import static com.lexcorp.joura.compile.analysis.alias.Instance.THIS;
-import static com.lexcorp.joura.compile.analysis.alias.Instance.Type;
+import static com.lexcorp.joura.compile.analysis.strategies.alias.Instance.THIS;
+import static com.lexcorp.joura.compile.analysis.strategies.alias.Instance.Type;
 
 public class Aliases {
     private final HashMap<String, Alias> aliases;

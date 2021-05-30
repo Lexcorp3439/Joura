@@ -43,7 +43,11 @@ public class MethodInvocationTestObject implements Trackable {
     public void testSomeInvocations() {
         MethodInvocationTestObject m1 = createStatic().setValue1(value2).setReference(new ReferenceTestObject());
         Methods methods = new Methods();
-        MethodInvocationTestObject m2 = methods.create().setValue1(value3);
+        MethodInvocationTestObject m2 = methods.create().setValue1(value3).call();
+    }
+
+    public MethodInvocationTestObject call() {
+        return this;
     }
 
 }

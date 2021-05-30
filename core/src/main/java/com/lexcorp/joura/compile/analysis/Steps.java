@@ -9,6 +9,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.lexcorp.joura.compile.analysis.generators.FieldsGenerator;
+import com.lexcorp.joura.compile.analysis.generators.MethodsGenerator;
 import com.lexcorp.joura.compile.analysis.strategies.AbstractStrategy;
 import com.lexcorp.joura.compile.analysis.strategies.AnalysisStrategy;
 import com.lexcorp.joura.runtime.options.Assign;
@@ -50,11 +52,23 @@ public class Steps {
     private List<CtField<?>> fields;
     private List<CtMethod<?>> methods;
     private AbstractStrategy strategy;
+    private FieldsGenerator fieldsGenerator;
+    private MethodsGenerator methodsGenerator;
 
     public Steps(Factory factory, CtClass<?> ctClass) {
         this.factory = factory;
         this.ctHelper = new CtHelper(factory);
         this.ctClass = ctClass;
+        this.methodsGenerator = new MethodsGenerator(this.ctClass, getTrackedMethods());
+        this.fieldsGenerator = new FieldsGenerator(this.ctClass, getFields());
+    }
+
+    public FieldsGenerator fieldsGenerator() {
+        return fieldsGenerator;
+    }
+
+    public MethodsGenerator methodsGenerator() {
+        return methodsGenerator;
     }
 
     public List<CtField<?>> getFields() {
@@ -74,9 +88,15 @@ public class Steps {
     }
 
     public List<CtMethod<?>> getTrackedMethods() {
+        Set<String> excludedMethods = new HashSet<>() {{
+            add("toString");
+            add("hashCode");
+            add("equals");
+        }};
         if (methods == null) {
             methods = ctClass.getMethods().stream()
                     .filter(m -> !m.isStatic())
+                    .filter(m -> !excludedMethods.contains(m.getSimpleName()))
                     .filter(m -> !m.hasAnnotation(Untracked.class))
                     .collect(Collectors.toList());
         }
@@ -252,8 +272,11 @@ public class Steps {
                 ctBlock.insertEnd(ctStatement);
                 ctBlock.insertEnd(ctReturnStatement);
             } else {
-                ctBlock.insertEnd(ctStatement);
-                ctBlock.insertEnd(ctReturn);
+                try {
+                    ctBlock.insertEnd(ctStatement);
+                    ctBlock.insertEnd(ctReturn);
+                } catch (spoon.SpoonException ignored) {
+                }
             }
         });
     }

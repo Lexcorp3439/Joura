@@ -1,4 +1,4 @@
-package com.lexcorp.joura.compile.analysis.strategies;
+package com.lexcorp.joura.compile.analysis.strategies.alias;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,8 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.lexcorp.joura.compile.analysis.alias.AliasAnalyser;
-import com.lexcorp.joura.compile.analysis.alias.Aliases;
+import com.lexcorp.joura.compile.analysis.strategies.AbstractStrategy;
 import com.lexcorp.joura.logger.JouraLogger;
 
 import spoon.reflect.code.CtAssignment;
@@ -32,9 +31,9 @@ public class AliasStrategy extends AbstractStrategy {
 
     @Override
     public void run() {
-        logger.info(START_ALIAS_ANALYSIS_MARKER, this.ctClass.getSimpleName() + " " + this.classFields.toString());
+        logger.debug(START_ALIAS_ANALYSIS_MARKER, this.ctClass.getSimpleName() + " " + this.classFields.toString());
         this.aliasAnalyser.run();
-        logger.info(END_ALIAS_ANALYSIS_MARKER, this.ctClass.getSimpleName() + "\n");
+        logger.debug(END_ALIAS_ANALYSIS_MARKER, this.ctClass.getSimpleName() + "\n");
     }
 
     @Override

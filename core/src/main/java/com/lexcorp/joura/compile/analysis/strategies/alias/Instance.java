@@ -1,4 +1,4 @@
-package com.lexcorp.joura.compile.analysis.alias;
+package com.lexcorp.joura.compile.analysis.strategies.alias;
 
 import java.util.Objects;
 

@@ -16,15 +16,15 @@ public class LogEventHandler implements EventHandler {
 
     @Override
     public <T extends Trackable> void accept(Event event) {
-        logger.info(OBJECT_MARKER, String.format(
+        logger.debug(OBJECT_MARKER, String.format(
                 "[%s:%d] - Trackable object: %s",
                 event.getTag(), event.getId(), event.getTrackable()
         ));
-        logger.info(METHOD_MARKER, String.format(
+        logger.debug(METHOD_MARKER, String.format(
                 "[%s:%d] - Invoked method: %s",
                 event.getTag(), event.getId(), event.getMethodName()
         ));
-        logger.info(FIELDS_MARKER, String.format(
+        logger.debug(FIELDS_MARKER, String.format(
                 "[%s:%d] - Editable fields: %s",
                 event.getTag(), event.getId(), event.getFields().toString()
         ));

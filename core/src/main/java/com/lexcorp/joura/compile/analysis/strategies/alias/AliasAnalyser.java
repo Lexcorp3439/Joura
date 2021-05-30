@@ -1,4 +1,4 @@
-package com.lexcorp.joura.compile.analysis.alias;
+package com.lexcorp.joura.compile.analysis.strategies.alias;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,7 +24,7 @@ import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
-import static com.lexcorp.joura.compile.analysis.alias.Instance.Type;
+import static com.lexcorp.joura.compile.analysis.strategies.alias.Instance.Type;
 import static com.lexcorp.joura.logger.Markers.Compile.CREATE_LOCAL_VAR_ANALYSIS;
 import static com.lexcorp.joura.logger.Markers.Compile.END_ALIAS_METHOD_MARKER;
 import static com.lexcorp.joura.logger.Markers.Compile.ITER_ALIAS_METHOD_MARKER_END;
@@ -88,13 +88,13 @@ public class AliasAnalyser {
     public Aliases runForMethod(CtMethod<?> method) {
         Aliases aliases = new Aliases();
         boolean is_changed = true;
-        logger.info(START_ALIAS_METHOD_MARKER, method.getSignature());
+        logger.debug(START_ALIAS_METHOD_MARKER, method.getSignature());
         method.getParameters().stream()
                 .filter(this::isTrackable)
                 .forEach(p -> aliases.add(p.getSimpleName(), aliases.obj(Type.UNKNOWN)));
 
         for (int i = 0; is_changed; i++) {
-            logger.info(ITER_ALIAS_METHOD_MARKER_START, String.valueOf(i));
+            logger.debug(ITER_ALIAS_METHOD_MARKER_START, String.valueOf(i));
             List<CtLocalVariable<?>> createLocalVariableStatements = method.getElements(Objects::nonNull);
             //noinspection SimplifyStreamApiCallChains
             boolean isChangedWithLocalVarStatements = createLocalVariableStatements.stream()
@@ -109,14 +109,14 @@ public class AliasAnalyser {
                     .filter(ctAssignment -> ctAssignment.getAssigned() instanceof CtVariableWrite)
                     .map(ctAssignment -> checkValidAssignment(aliases, ctAssignment))
                     .anyMatch(r -> r);
-            logger.info(
+            logger.debug(
                     ITER_ALIAS_METHOD_MARKER_END,
                     "create_local_var=" + isChangedWithLocalVarStatements + " " +
                             "assign_local_var=" + isChangedWithAssignVarStatements
             );
             is_changed = isChangedWithAssignVarStatements || isChangedWithLocalVarStatements;
         }
-        logger.info(END_ALIAS_METHOD_MARKER, aliases.toString() + "\n" + "===============================");
+        logger.debug(END_ALIAS_METHOD_MARKER, aliases.toString() + "\n" + "===============================");
         return aliases;
     }
 
@@ -125,14 +125,14 @@ public class AliasAnalyser {
     }
 
     private boolean checkValidAssignment(Aliases aliases, CtAssignment<?, ?> ctAssignment) {
-        logger.info(CREATE_LOCAL_VAR_ANALYSIS, ctAssignment.toString());
+        logger.debug(CREATE_LOCAL_VAR_ANALYSIS, ctAssignment.toString());
         CtExpression<?> assignment = ctAssignment.getAssignment();
         Alias assignedAlias = aliases.get(ctAssignment.getAssigned().toString());
         return this.checkExpression(aliases, assignedAlias, assignment);
     }
 
     private boolean createLocalVariableAnalysis(Aliases aliases, CtLocalVariable<?> ctLocalVariable) {
-        logger.info(CREATE_LOCAL_VAR_ANALYSIS, ctLocalVariable.toString());
+        logger.debug(CREATE_LOCAL_VAR_ANALYSIS, ctLocalVariable.toString());
         Alias alias = aliases.get(ctLocalVariable.getSimpleName());
         CtExpression<?> ctExpression = ctLocalVariable.getDefaultExpression();
         return this.checkExpression(aliases, alias, ctExpression);
@@ -152,7 +152,9 @@ public class AliasAnalyser {
         }
         if (ctExpression instanceof CtInvocation) {
             CtInvocation<?> ctInvocation = (CtInvocation<?>) ctExpression;
-            String methodSignature = getMethodSignature(ctInvocation.getExecutable().getDeclaration());
+            String methodSignature = ctInvocation.getExecutable().getDeclaration() == null
+                    ? ctInvocation.getExecutable().getSignature()
+                    : getMethodSignature(ctInvocation.getExecutable().getDeclaration());
             if (methodReturns.containsKey(methodSignature)) {
                 return methodReturns.get(methodSignature).isEmpty()
                         ? aliases.add(alias, aliases.obj(Type.UNKNOWN))

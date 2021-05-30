@@ -1,6 +1,8 @@
-package com.lexcorp.joura.compile.analysis.strategies;
+package com.lexcorp.joura.compile.analysis.strategies.simple;
 
 import java.util.List;
+
+import com.lexcorp.joura.compile.analysis.strategies.AbstractStrategy;
 
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;

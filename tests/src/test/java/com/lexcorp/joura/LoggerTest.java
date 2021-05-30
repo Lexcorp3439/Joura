@@ -5,12 +5,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.logging.Level;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.lexcorp.joura.compile.processors.TrackProcessor;
 import com.lexcorp.joura.handlers.EventsTestHandler;
 import com.lexcorp.joura.objects.SimpleTestObject;
+import com.lexcorp.joura.runtime.handlers.EventsCountEventHandler;
 import com.lexcorp.joura.runtime.handlers.LogEventHandler;
 import com.lexcorp.joura.runtime.listeners.FieldChangeReceiver;
 import com.lexcorp.joura.utils.IOUtils;
@@ -29,6 +31,7 @@ public class LoggerTest {
     static Object instance;
     static FieldChangeReceiver listener;
     static EventsTestHandler eventsTestHandler;
+    static EventsCountEventHandler eventsCountEventHandler;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -43,8 +46,15 @@ public class LoggerTest {
         instance = testClass.getDeclaredConstructors()[0].newInstance();
         listener = FieldChangeReceiver.getInstance();
         eventsTestHandler = new EventsTestHandler();
+        eventsCountEventHandler = new EventsCountEventHandler();
         listener.addEventHandler(eventsTestHandler);
         listener.addEventHandler(new LogEventHandler());
+        listener.addEventHandler(eventsCountEventHandler);
+    }
+
+    @AfterEach
+    void tearDown() {
+        eventsCountEventHandler.print();
     }
 
     @Test

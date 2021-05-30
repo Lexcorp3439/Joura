@@ -43,12 +43,12 @@ public class JouraLogger {
         return this;
     }
 
-    public void info(String message) {
-        logger.info(message);
+    public void debug(String message) {
+        logger.fine(message);
     }
 
-    public void info(Marker marker, String message) {
-        logger.info(messageWithMarker(marker, message));
+    public void debug(Marker marker, String message) {
+        logger.fine(messageWithMarker(marker, message));
     }
 
     public void warn(String message) {
@@ -57,6 +57,14 @@ public class JouraLogger {
 
     public void warn(Marker marker, String message) {
         logger.warning(messageWithMarker(marker, message));
+    }
+
+    public void info(String message) {
+        logger.info(message);
+    }
+
+    public void info(Marker marker, String message) {
+        logger.info(messageWithMarker(marker, message));
     }
 
     public void severe(String message) {

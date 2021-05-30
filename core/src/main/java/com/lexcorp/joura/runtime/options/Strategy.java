@@ -3,9 +3,9 @@ package com.lexcorp.joura.runtime.options;
 import java.lang.reflect.InvocationTargetException;
 
 import com.lexcorp.joura.compile.analysis.strategies.AbstractStrategy;
-import com.lexcorp.joura.compile.analysis.strategies.AliasStrategy;
 import com.lexcorp.joura.compile.analysis.strategies.AnalysisStrategy;
-import com.lexcorp.joura.compile.analysis.strategies.SimpleStrategy;
+import com.lexcorp.joura.compile.analysis.strategies.alias.AliasStrategy;
+import com.lexcorp.joura.compile.analysis.strategies.simple.SimpleStrategy;
 
 public enum Strategy {
     ALWAYS_TRACK(SimpleStrategy.class), ALIAS_ANALYSIS(AliasStrategy.class);
