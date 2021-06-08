@@ -35,8 +35,6 @@ public class Instance {
 
     @Override
     public String toString() {
-        return "Instance{" +
-                " type=" + type +
-                " }";
+        return "" + type;
     }
 }

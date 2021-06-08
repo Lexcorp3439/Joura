@@ -3,14 +3,12 @@ package com.lexcorp.joura.compile.analysis.generators;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.lexcorp.joura.compile.analysis.strategies.AbstractStrategy;
 import com.lexcorp.joura.runtime.options.TrackField;
 import com.lexcorp.joura.utils.CtHelper;
 
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -20,11 +18,7 @@ public class FieldsGenerator {
     private final Factory factory;
     private final CtHelper ctHelper;
     private final CtClass<?> ctClass;
-    private CtField<Boolean> trackField;
-    private CtField<String> identifierField;
-    private List<CtField<?>> fields;
-    private List<CtMethod<?>> methods;
-    private AbstractStrategy strategy;
+    private final List<CtField<?>> fields;
 
     public FieldsGenerator(CtClass<?> ctClass, List<CtField<?>> fields) {
         this.factory = ctClass.getFactory();
@@ -34,6 +28,7 @@ public class FieldsGenerator {
     }
 
     public CtField<Boolean> createClassTrackFieldIfNotAssigned(boolean defaultValue) {
+        CtField<Boolean> trackField;
         List<CtField<?>> ctFields = this.fields.stream()
                 .filter(f -> f.hasAnnotation(TrackField.class))
                 .collect(Collectors.toList());
@@ -57,10 +52,10 @@ public class FieldsGenerator {
     }
 
     public CtField<String> createTagField() {
-        CtTypeReference<String> typeReference = factory.Type().STRING;
-        CtLiteral<String> ctLiteral = ctHelper.createCtLiteral("UNKNOWN", typeReference);
-        CtField<?> field = ctHelper.createCtField(createFieldName(), factory.Type().STRING, ctLiteral);
-        identifierField = ctHelper.createCtField(createFieldName(), factory.Type().STRING, ctLiteral);
+        CtField<String> identifierField;
+        CtTypeReference<String> stringType = factory.Type().STRING;
+        CtLiteral<String> ctLiteral = ctHelper.createCtLiteral("UNKNOWN", stringType);
+        identifierField = ctHelper.createCtField(createFieldName(), stringType, ctLiteral);
         identifierField.setDocComment("Tag");
         return identifierField;
     }

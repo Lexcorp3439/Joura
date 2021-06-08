@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.lexcorp.joura.logger.JouraLogger;
 import com.lexcorp.joura.utils.CtHelper;
@@ -25,6 +26,7 @@ import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
 import static com.lexcorp.joura.compile.analysis.strategies.alias.Instance.Type;
+import static com.lexcorp.joura.logger.Markers.Compile.CHECK_VALID_ASSIGMENT;
 import static com.lexcorp.joura.logger.Markers.Compile.CREATE_LOCAL_VAR_ANALYSIS;
 import static com.lexcorp.joura.logger.Markers.Compile.END_ALIAS_METHOD_MARKER;
 import static com.lexcorp.joura.logger.Markers.Compile.ITER_ALIAS_METHOD_MARKER_END;
@@ -96,27 +98,30 @@ public class AliasAnalyser {
         for (int i = 0; is_changed; i++) {
             logger.debug(ITER_ALIAS_METHOD_MARKER_START, String.valueOf(i));
             List<CtLocalVariable<?>> createLocalVariableStatements = method.getElements(Objects::nonNull);
-            //noinspection SimplifyStreamApiCallChains
             boolean isChangedWithLocalVarStatements = createLocalVariableStatements.stream()
                     .filter(ctAssignment -> isTrackable(ctAssignment.getType()))
                     .map(ctLocalVariable -> createLocalVariableAnalysis(aliases, ctLocalVariable))
+                    .collect(Collectors.toList())
+                    .stream()
                     .anyMatch(r -> r);
 
+
             List<CtAssignment<?, ?>> assignVariableStatements = method.getElements(Objects::nonNull);
-            //noinspection SimplifyStreamApiCallChains
             boolean isChangedWithAssignVarStatements = assignVariableStatements.stream()
                     .filter(ctAssignment -> isTrackable(ctAssignment.getType()))
                     .filter(ctAssignment -> ctAssignment.getAssigned() instanceof CtVariableWrite)
                     .map(ctAssignment -> checkValidAssignment(aliases, ctAssignment))
+                    .collect(Collectors.toList())
+                    .stream()
                     .anyMatch(r -> r);
             logger.debug(
                     ITER_ALIAS_METHOD_MARKER_END,
                     "create_local_var=" + isChangedWithLocalVarStatements + " " +
                             "assign_local_var=" + isChangedWithAssignVarStatements
             );
-            is_changed = isChangedWithAssignVarStatements || isChangedWithLocalVarStatements;
+            is_changed = isChangedWithLocalVarStatements || isChangedWithAssignVarStatements;
         }
-        logger.debug(END_ALIAS_METHOD_MARKER, aliases.toString() + "\n" + "===============================");
+        logger.debug(END_ALIAS_METHOD_MARKER, aliases + "\n" + "===============================");
         return aliases;
     }
 
@@ -125,16 +130,22 @@ public class AliasAnalyser {
     }
 
     private boolean checkValidAssignment(Aliases aliases, CtAssignment<?, ?> ctAssignment) {
-        logger.debug(CREATE_LOCAL_VAR_ANALYSIS, ctAssignment.toString());
         CtExpression<?> assignment = ctAssignment.getAssignment();
         Alias assignedAlias = aliases.get(ctAssignment.getAssigned().toString());
-        return this.checkExpression(aliases, assignedAlias, assignment);
+        boolean isChanged = this.checkExpression(aliases, assignedAlias, assignment);
+        logger.debug(
+                CHECK_VALID_ASSIGMENT,
+                ctAssignment + "  || " + aliases.get(ctAssignment.getAssigned().toString()) + " || " + ctAssignment.getAssignment());
+        return isChanged;
     }
 
     private boolean createLocalVariableAnalysis(Aliases aliases, CtLocalVariable<?> ctLocalVariable) {
-        logger.debug(CREATE_LOCAL_VAR_ANALYSIS, ctLocalVariable.toString());
         Alias alias = aliases.get(ctLocalVariable.getSimpleName());
         CtExpression<?> ctExpression = ctLocalVariable.getDefaultExpression();
+        logger.debug(
+                CREATE_LOCAL_VAR_ANALYSIS,
+                ctLocalVariable + "  || " + aliases.get(ctLocalVariable.getSimpleName()));
+
         return this.checkExpression(aliases, alias, ctExpression);
     }
 

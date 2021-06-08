@@ -11,7 +11,6 @@ public class SimpleStrategy extends AbstractStrategy {
 
     @Override
     public void run() {
-
     }
 
     @Override

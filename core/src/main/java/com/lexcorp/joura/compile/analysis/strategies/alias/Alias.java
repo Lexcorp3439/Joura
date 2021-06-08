@@ -58,6 +58,6 @@ public class Alias {
 
     @Override
     public String toString() {
-        return instances.toString();
+        return this.name + "->" + instances.toString();
     }
 }

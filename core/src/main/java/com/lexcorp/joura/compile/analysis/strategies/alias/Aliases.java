@@ -118,7 +118,7 @@ public class Aliases {
 
     @Override
     public String toString() {
-        return "aliases=" + aliases;
+        return "aliases=" + aliases.values();
     }
 
     @FunctionalInterface

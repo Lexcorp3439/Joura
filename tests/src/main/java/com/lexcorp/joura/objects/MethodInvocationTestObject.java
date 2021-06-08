@@ -46,6 +46,11 @@ public class MethodInvocationTestObject implements Trackable {
         MethodInvocationTestObject m2 = methods.create().setValue1(value3).call();
     }
 
+//    @ExpectedFields(fields = {"reference"})
+//    public void testFieldMethodInvocations() {
+//        this.reference.testWriteFieldsWithReference();
+//    }
+
     public MethodInvocationTestObject call() {
         return this;
     }

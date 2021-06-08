@@ -3,17 +3,20 @@ package com.lexcorp.joura.compile.analysis.generators;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.lexcorp.joura.compile.analysis.strategies.AbstractStrategy;
 import com.lexcorp.joura.runtime.options.TrackInitializer;
 import com.lexcorp.joura.utils.CtHelper;
 
 import spoon.reflect.code.CtAssignment;
+import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtFieldWrite;
+import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLiteral;
+import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtUnaryOperator;
@@ -25,16 +28,13 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.ModifierKind;
 import spoon.reflect.factory.Factory;
+import spoon.reflect.reference.CtTypeReference;
 
 public class MethodsGenerator {
     private final Factory factory;
     private final CtHelper ctHelper;
     private final CtClass<?> ctClass;
-    private CtField<Boolean> trackField;
-    private CtField<String> identifierField;
-    private List<CtField<?>> fields;
-    private List<CtMethod<?>> methods;
-    private AbstractStrategy strategy;
+    private final List<CtMethod<?>> methods;
 
     public MethodsGenerator(CtClass<?> ctClass, List<CtMethod<?>> trackedMethods) {
         this.factory = ctClass.getFactory();
@@ -43,22 +43,59 @@ public class MethodsGenerator {
         this.methods = trackedMethods;
     }
 
-    public CtMethod<Void> createSetTagMethod() {
+    public void updateMethodWithStatement(CtMethod<?> method, CtStatement ctStatement) {
+        if (method.getType().equals(factory.Type().VOID_PRIMITIVE)) {
+            method.getBody().insertEnd(ctStatement);
+        } else {
+            this.updateReturnStatements(method, ctStatement);
+        }
+    }
+
+    public void updateReturnStatements(CtMethod<?> method, CtStatement ctStatement) {
+        List<CtReturn<?>> ctReturns = method.getElements(Objects::nonNull);
+        ctReturns.forEach(ctReturn -> {
+            ctStatement.setParent(ctReturn.getParent());
+            CtBlock<?> ctBlock = ctReturn.getParent(CtBlock.class);
+            ctBlock.removeStatement(ctReturn);
+            if (ctReturn.getElements(e -> e instanceof CtInvocation).size() > 0) {
+                CtLocalVariable<?> localVariable = ctHelper.createLocalVar(
+                        (CtTypeReference) method.getType(), ctReturn.getReturnedExpression()
+                );
+                CtVariableRead variableRead = ctHelper.createCtVariableRead(localVariable.getReference(), false);
+                CtReturn<?> ctReturnStatement = factory.createReturn().setReturnedExpression(variableRead);
+
+                ctBlock.insertEnd(localVariable);
+                ctBlock.insertEnd(ctStatement);
+                ctBlock.insertEnd(ctReturnStatement);
+            } else {
+                try {
+                    ctBlock.insertEnd(ctStatement);
+                    ctBlock.insertEnd(ctReturn);
+                } catch (spoon.SpoonException ignored) {
+                }
+            }
+        });
+    }
+
+    public CtMethod<Void> createSetTagMethod(CtField<String> identifierField) {
         CtParameter<String> parameter = ctHelper.createCtParameter(factory.Type().STRING, "newIdentifier");
         CtMethod<Void> setTagMethod = ctHelper.createMethodWithParameters(
-                "setTag", factory.Type().VOID_PRIMITIVE,
-                Collections.singleton(ModifierKind.PUBLIC), List.of(parameter));
-        CtFieldWrite<String> ctFieldWrite = ctHelper.createCtFieldWrite(
-                factory.createThisAccess(ctClass.getTypeErasure()), this.identifierField.getReference()
+                "setTag",
+                factory.Type().VOID_PRIMITIVE,
+                Collections.singleton(ModifierKind.PUBLIC),
+                List.of(parameter)
         );
-
+        CtFieldWrite<String> ctFieldWrite = ctHelper.createCtFieldWrite(
+                factory.createThisAccess(ctClass.getTypeErasure()),
+                identifierField.getReference()
+        );
         CtVariableRead<String> ctVariableRead = ctHelper.createCtVariableRead(parameter.getReference(), false);
         CtAssignment<String, String> ctAssignment = ctHelper.createCtAssignment(ctFieldWrite, ctVariableRead, factory.Type().STRING);
         setTagMethod.getBody().insertBegin(ctAssignment);
         return setTagMethod;
     }
 
-    public CtMethod<String> createGetTagMethod() {
+    public CtMethod<String> createGetTagMethod(CtField<String> identifierField) {
         CtMethod<String> getTagMethod = ctHelper.createMethod(
                 "getTag", factory.Type().STRING, Collections.singleton(ModifierKind.PUBLIC));
         CtFieldRead<String> ctFieldRead = ctHelper.createCtFieldRead(ctClass, identifierField);
@@ -96,17 +133,17 @@ public class MethodsGenerator {
 
     }
 
-    public CtStatement createTrackMethodBody(boolean isStart) {
+    public CtStatement createTrackMethodBody(boolean isStart, CtField<Boolean> trackField) {
         CtFieldWrite<Boolean> ctFieldWrite = ctHelper.createCtFieldWrite(
-                factory.createThisAccess(ctClass.getTypeErasure()), this.trackField.getReference()
+                factory.createThisAccess(ctClass.getTypeErasure()), trackField.getReference()
         );
         CtLiteral<Boolean> ctLiteral = ctHelper.createCtLiteral(isStart, factory.Type().BOOLEAN);
         return ctHelper.createCtAssignment(ctFieldWrite, ctLiteral, factory.Type().BOOLEAN);
     }
 
-    public CtStatement createTrackMethodBodyWithInvert() {
+    public CtStatement createTrackMethodBodyWithInvert(CtField<Boolean> trackField) {
         CtFieldWrite<Boolean> ctFieldWrite = ctHelper.createCtFieldWrite(
-                factory.createThisAccess(ctClass.getTypeErasure()), this.trackField.getReference()
+                factory.createThisAccess(ctClass.getTypeErasure()), trackField.getReference()
         );
         CtUnaryOperator<Boolean> unaryOperator = factory.createUnaryOperator();
         unaryOperator.setOperand(ctHelper.createCtFieldRead(ctClass, trackField));

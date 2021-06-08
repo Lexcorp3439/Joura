@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.lexcorp.joura.compile.analysis.Steps;
+import com.lexcorp.joura.compile.analysis.generators.MethodsGenerator;
 import com.lexcorp.joura.logger.JouraLogger;
 import com.lexcorp.joura.runtime.Trackable;
 import com.lexcorp.joura.runtime.handlers.LogEventHandler;
@@ -78,26 +79,27 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
 
         List<CtMethod<?>> methods = steps.getTrackedMethods();
 
-        CtField<Boolean> trackField = steps.createClassTrackFieldIfNotAssigned(alwaysTrack);
+        CtField<Boolean> trackField = steps.fieldsGenerator().createClassTrackFieldIfNotAssigned(alwaysTrack);
         ctClass.addField(0, trackField);
 
-        CtField<String> identifierField = steps.createTagField();
+        CtField<String> identifierField = steps.fieldsGenerator().createTagField();
         ctClass.addField(1, identifierField);
 
-        CtMethod<Void> setTagMethod = steps.createSetTagMethod();
+        CtMethod<Void> setTagMethod = steps.methodsGenerator().createSetTagMethod(identifierField);
         ctClass.addMethod(setTagMethod);
 
-        CtMethod<String> getTagMethod = steps.createGetTagMethod();
+        CtMethod<String> getTagMethod = steps.methodsGenerator().createGetTagMethod(identifierField);
         ctClass.addMethod(getTagMethod);
 
         if (!alwaysTrack) {
-            CtMethod<?> startTrack = steps.createTrackMethodIfNotExist(true);
-            CtMethod<?> stopTrack = steps.createTrackMethodIfNotExist(false);
+            MethodsGenerator generator = steps.methodsGenerator();
+            CtMethod<?> startTrack = generator.createTrackMethodIfNotExist(true);
+            CtMethod<?> stopTrack = generator.createTrackMethodIfNotExist(false);
             if (startTrack.equals(stopTrack)) {
-                steps.updateMethodWithStatement(startTrack, steps.createTrackMethodBodyWithInvert());
+                generator.updateMethodWithStatement(startTrack, generator.createTrackMethodBodyWithInvert(trackField));
             } else {
-                steps.updateMethodWithStatement(startTrack, steps.createTrackMethodBody(true));
-                steps.updateMethodWithStatement(stopTrack, steps.createTrackMethodBody(false));
+                generator.updateMethodWithStatement(startTrack, generator.createTrackMethodBody(true, trackField));
+                generator.updateMethodWithStatement(stopTrack, generator.createTrackMethodBody(false, trackField));
             }
         }
 
@@ -136,7 +138,7 @@ public class TrackProcessor extends AbstractProcessor<CtClass<? extends Trackabl
                         trackField.getReference(), method, editableFields
                 );
 
-                steps.updateMethodWithStatement(method, fieldChangeNotifierStatement);
+                steps.methodsGenerator().updateMethodWithStatement(method, fieldChangeNotifierStatement);
             }
             logger.debug(END_METHOD_PROCESSING_MARKER, method.getSignature() + "\n");
         }
